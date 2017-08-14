@@ -1,4 +1,4 @@
-<XMLDB xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" PATH="local/changeloglib/db" VERSION="20170709" COMMENT="Upload notification" xsi:noNamespaceSchemaLocation="../../../lib/xmldb/xmldb.xsd">
+<XMLDB xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" PATH="local/changeloglib/db" VERSION="20170814" COMMENT="Changelog Lib" xsi:noNamespaceSchemaLocation="../../../lib/xmldb/xmldb.xsd">
   <TABLES>
     <TABLE NAME="local_changeloglib_backup" COMMENT="All files for which a backup was created">
       <FIELDS>

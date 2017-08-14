@@ -168,11 +168,11 @@ class local_changeloglib_update_detector {
     }
 
     /**
-     * Check whether there is a previous version of this course module stored.
+     * Check whether there is a previous version of exactly this element is stored.
      * This situation happens if the user updates a file via the 'edit settings' dialog.
-     * In this case the passed `original_cm` is the same as the course module from the backup.
-     * Because Moodle will increase the cm ID for each new file, an other upload can not be detected
-     * as a definite predecessor falsely.
+     * In this case the ID does not change and `data` will map.
+     * Because Moodle will increase the IDs for each new file, an other upload can not be detected
+     * as a definite predecessor falsely. (Only if `data` was set to a non-ID field)
      * @return null|stdClass Null if no definite predecessor could be found. StdClass width similarity
      * and file a definite predecessor was found. Hint: Similarity is always 1
      */
@@ -202,6 +202,8 @@ class local_changeloglib_update_detector {
     }
 
     /**
+     * Get the best candidate based on the meta information.
+     * Candidates are taken from the backups and from `further_candidates`
      * @return null|stdClass
      * Null is returned if no candidate fits.
      * The stdClass contains the calculated similarity and the stored_file of the best candidate
@@ -219,6 +221,7 @@ class local_changeloglib_update_detector {
     }
 
     /**
+     * Checks all passed files. Returns the best ob them with the calculated similarity.
      * @param stored_file[] $candidate_files
      * @return null|stdClass
      * Null is returned if no candidate fits.
