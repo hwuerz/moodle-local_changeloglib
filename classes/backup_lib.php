@@ -76,7 +76,7 @@ class local_changeloglib_backup_lib {
             'sortorder DESC, id ASC',
             false);
 
-        foreach($area_files as $file) { // Iterate all files found
+        foreach ($area_files as $file) { // Iterate all files found
 
             // Store a reference for this file in the plugin table
             $id = $DB->insert_record(self::BACKUP_TABLE, (object)array(

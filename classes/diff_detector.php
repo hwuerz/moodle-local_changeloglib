@@ -82,7 +82,7 @@ class local_changeloglib_diff_detector {
                     $diff_output .= ', ';
                 }
                 $add_comma = true;
-                $diff_output .= ($page + 1); // +1 to map the index (starting with zero) to a page number (starting with one)
+                $diff_output .= ($page + 1); // Add +1 to map the index (starting with zero) to a page number (starting with one)
             }
         }
         return $diff_output;

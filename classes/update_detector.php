@@ -80,10 +80,10 @@ class local_changeloglib_update_detector {
      * @param array $new_data The data array of the new file with constraints for a definite predecessor.
      * @param int $context The context of the file and its predecessor. (Resources: The course context)
      * @param int $scope The scope of the file and its predecessor within the context. (In courses: the section)
-     * @param stored_file[] $further_candidates All other files which should be checked as predecessor. Use this for deletion in progress.
+     * @param stored_file[] $further_candidates All other files which should be checked as predecessor.
+     *                                          Use this for deletion in progress.
      */
-    public function __construct(stored_file $new_file, array $new_data, $context, $scope, array $further_candidates)
-    {
+    public function __construct(stored_file $new_file, array $new_data, $context, $scope, array $further_candidates) {
         $this->new_file = $new_file;
         $this->new_data = $new_data;
         $this->context = $context;
@@ -187,12 +187,12 @@ class local_changeloglib_update_detector {
             $data = json_decode($candidate->data, true);
             $is_equal = true;
             foreach ($this->new_data as $key => $value) { // Check each data attribute of the current file
-                if($data[$key] != $value) {
+                if ($data[$key] != $value) {
                     $is_equal = false;
                     break;
                 }
             }
-            if($is_equal) { // The candidate is a valid predecessor
+            if ($is_equal) { // The candidate is a valid predecessor
                 $file = local_changeloglib_backup_lib::get_backup_file($candidate);
                 $definite_predecessors[] = $file;
             }
