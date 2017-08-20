@@ -75,6 +75,15 @@ class local_changeloglib_update_detector {
     private $candidates;
 
     /**
+     * Whether this detector should ensure that the MIME type of the found predecessor matches
+     * the MIME type of the new file.
+     * If this value is true, all candidates with not matching type will be skipped.
+     * If this value is false, the MIME Type will be handled as a similarity property.
+     * @var bool
+     */
+    private $ensure_mime_type = true;
+
+    /**
      * local_changeloglib_update_detector constructor.
      * @param stored_file $new_file The new file whose predecessor should be found.
      * @param array $new_data The data array of the new file with constraints for a definite predecessor.
@@ -99,6 +108,17 @@ class local_changeloglib_update_detector {
      */
     public function get_new_file() {
         return $this->new_file;
+    }
+
+    /**
+     * Whether this detector should ensure that the MIME type of the found predecessor matches
+     * the MIME type of the new file.
+     * If this value is true, all candidates with not matching type will be skipped.
+     * If this value is false, the MIME Type will be handled as a similarity property.
+     * @param bool $ensure_mime_type Whether the MIME type of the candidates must match or not.
+     */
+    public function set_ensure_mime_type($ensure_mime_type) {
+        $this->ensure_mime_type = $ensure_mime_type;
     }
 
     /**
@@ -237,11 +257,25 @@ class local_changeloglib_update_detector {
         foreach ($candidate_files as $key => $candidate_file) {
 
             // The types of the files must match
-            if ($this->new_file->get_mimetype() != $candidate_file->get_mimetype()) {
+            $fitting_mime_type = $this->new_file->get_mimetype() == $candidate_file->get_mimetype();
+
+            // The MIME types do not match and this detector should ensure, that they do.
+            if ($this->ensure_mime_type && !$fitting_mime_type) {
                 continue;
             }
 
+            // The similarity in the range [0, 1]
             $similarity = self::calculate_meta_similarity($this->new_file, $candidate_file);
+
+            // Check for soft handling of MIME-Types
+            if (!$this->ensure_mime_type) { // This detector should not ensure the MIMe-Types...
+                if ($fitting_mime_type) { // ... but they fit --> Increase the similarity
+                    $similarity += 1;
+                }
+                // The similarity should be in the range [0, 1] again. If the detector does not ensure MIME Types
+                // and the types do not match, the similarity will decrease.
+                $similarity /= 2;
+            }
 
             if ($similarity > $best_similarity) { // This candidate is the best until now
                 $best_candidate = $key;
