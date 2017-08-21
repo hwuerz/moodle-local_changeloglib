@@ -57,6 +57,8 @@ class local_changeloglib_diff_detector {
      */
     private $page_changes_counter;
 
+    private $number_of_lines = array();
+
     /**
      * local_changeloglib_diff_detector constructor.
      * @param string $first_file The filename for the first text document.
@@ -88,6 +90,33 @@ class local_changeloglib_diff_detector {
         return $diff_output;
     }
 
+    public function has_acceptable_amount_of_changes() {
+        $changes = 0; // How many changes were detected in the document (line based)
+        $changed_pages = 0; // How many pages were changed
+        $total_pages = 0; // How many pages do exist in the document.
+        foreach ($this->page_changes_counter[1] as $page => $amount) {
+            $changes += $amount;
+            $total_pages++;
+            if ($amount > 0) {
+                $changed_pages++;
+            }
+        }
+
+        // Get the ratio of changed LINES compared to the total amount of lines
+        $ratio = $changes / ($this->number_of_lines[1] + 1); // +1 to avoid division through zero
+        if ($ratio > 0.5) { // Too many lines have been changed --> This was not a real predecessor.
+            return false;
+        }
+
+        // Get the ratio of changed PAGES compared to the total amount of pages
+        $ratio = $changed_pages / ($total_pages + 1); // +1 to avoid division through zero
+        if ($ratio > 0.5) { // Too many lines have been changed --> This was not a real predecessor.
+            return false;
+        }
+
+        return true;
+    }
+
     /**
      * Get an overview over the amount of changes on each page.
      * Fills the page_changes_counter array
@@ -99,7 +128,7 @@ class local_changeloglib_diff_detector {
         $this->page_changes_counter = array(array(), array());
         for ($document = 0; $document < 2; $document++) { // Loop the two files
             // Loop pages
-            // <= because last page has not an page break and therefor no entry in the page_end_at_line array
+            // <= because last page has not a page break and therefor no entry in the page_end_at_line array
             for ($page = 0; $page <= count($this->page_end_at_line[$document]); $page++) {
                 $this->page_changes_counter[$document][$page] = 0;
             }
@@ -181,6 +210,7 @@ class local_changeloglib_diff_detector {
      */
     private function generate_page_index($document) {
         $this->page_end_at_line[$document] = array(); // Each element contains the line where a new page starts
+        $this->number_of_lines[$document] = 0;
         $handle = fopen($this->file[$document], "r");
         if ($handle) { // File could be opened
             $current_line_number = 0;
@@ -192,6 +222,7 @@ class local_changeloglib_diff_detector {
                 $current_line_number++;
             }
             fclose($handle);
+            $this->number_of_lines[$document] = $current_line_number;
         }
     }
 
