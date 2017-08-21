@@ -118,14 +118,25 @@ class local_changeloglib_backup_lib {
     }
 
     /**
+     * Deletes all backup files with the passed context and scope.
+     * This method will be called to delete old submissions when new files are saved.
+     * @param int $context The context whose backups should be deleted
+     * @param int $scope The scope inside the context whose backups should be deleted.
+     */
+    public static function clean_up_selected($context, $scope) {
+        self::clean_up_files('context = ? AND scope = ?', array($context, $scope));
+    }
+
+    /**
      * Deletes all backup files which fulfill the passed select query.
      * @param string $select The DB query to select the files which should be deleted
+     * @param null $params The params to the select statement.
      */
-    private static function clean_up_files($select) {
+    private static function clean_up_files($select, $params = null) {
         global $DB;
 
         // Get the references to the files
-        $records = $DB->get_records_select(self::BACKUP_TABLE, $select);
+        $records = $DB->get_records_select(self::BACKUP_TABLE, $select, $params);
 
         // Get the file instances for the records
         foreach ($records as $record) {
@@ -140,7 +151,7 @@ class local_changeloglib_backup_lib {
         }
 
         // Delete the reference in the database
-        $DB->delete_records_select(self::BACKUP_TABLE, $select);
+        $DB->delete_records_select(self::BACKUP_TABLE, $select, $params);
     }
 
     /**
