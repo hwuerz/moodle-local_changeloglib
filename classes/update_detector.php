@@ -84,6 +84,14 @@ class local_changeloglib_update_detector {
     private $ensure_mime_type = true;
 
     /**
+     * The minimum similarity a predecessor must have.
+     * If the similarity is below, the file will be rejected as a predecessor.
+     * Adjust this value to define a level of similarity you want to ensure.
+     * @var float
+     */
+    private $min_similarity = 0.5;
+
+    /**
      * local_changeloglib_update_detector constructor.
      * @param stored_file $new_file The new file whose predecessor should be found.
      * @param array $new_data The data array of the new file with constraints for a definite predecessor.
@@ -122,6 +130,15 @@ class local_changeloglib_update_detector {
     }
 
     /**
+     * If the similarity is below this value, a file will be rejected as a predecessor.
+     * Adjust this value to define a level of similarity you want to ensure.
+     * @param float $min_similarity The minimum similarity a predecessor must have.
+     */
+    public function set_min_similarity($min_similarity) {
+        $this->min_similarity = $min_similarity;
+    }
+
+    /**
      * Get all backups stored with the same context and scope.
      * @return array The available records.
      */
@@ -148,7 +165,7 @@ class local_changeloglib_update_detector {
         }
 
         // Threshold: If the candidate similarity is lower this value is is not a predecessor
-        if ($candidate->similarity < 0.5) {
+        if ($candidate->similarity < $this->min_similarity) {
             return false;
         }
 
