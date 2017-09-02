@@ -4,8 +4,10 @@ Changeloglib Plugin for Moodle
 This plugin provides helper methods to handle the backup process of files which are required
 for a changelog generation. 
 This plugin will analyse the files and detect changes. 
+Currently all file types are supported for backup and PDF documents can be used for difference
+detection. 
 
-Without any other plugins, this will not do anything.
+Without any other plugins this will not do anything.
 
 License
 -------
