@@ -16,6 +16,7 @@
 
 /**
  * ChangelogLib.
+ *
  * A library to support other plugins which have to detect changes in files.
  * This plugin does not do anything of its own. It is only useful as a
  * dependency for other plugins.
@@ -29,7 +30,7 @@
 defined('MOODLE_INTERNAL') || die;
 
 /**
- * Performes an upgrade of the used database tables if required.
+ * Performs an upgrade of the used database tables if required.
  * @param int $oldversion The currently installed version.
  * @return bool Whether the upgrade was successful or not.
  */

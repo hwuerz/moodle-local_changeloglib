@@ -16,6 +16,7 @@
 
 /**
  * ChangelogLib.
+ *
  * A library to support other plugins which have to detect changes in files.
  * This plugin does not do anything of its own. It is only useful as a
  * dependency for other plugins.

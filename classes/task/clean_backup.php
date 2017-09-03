@@ -16,6 +16,7 @@
 
 /**
  * ChangelogLib.
+ *
  * A library to support other plugins which have to detect changes in files.
  * This plugin does not do anything of its own. It is only useful as a
  * dependency for other plugins.
@@ -34,6 +35,7 @@ require_once(dirname(__FILE__) . '/../../definitions.php');
 
 /**
  * Class clean_backup.
+ *
  * Defines a task to remove old backups which are not required any longer.
  * @copyright (c) 2017 Hendrik Wuerz
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
