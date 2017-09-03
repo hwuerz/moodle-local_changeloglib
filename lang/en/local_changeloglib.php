@@ -28,6 +28,6 @@
 
 defined('MOODLE_INTERNAL') || die;
 
-// Module metadata
+// Module metadata.
 $string['pluginname'] = 'Changelog Lib';
 $string['deletion_backup_clean_task'] = 'Clean old backups';

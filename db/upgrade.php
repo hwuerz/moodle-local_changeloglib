@@ -28,6 +28,11 @@
 
 defined('MOODLE_INTERNAL') || die;
 
+/**
+ * Performes an upgrade of the used database tables if required.
+ * @param int $oldversion The currently installed version.
+ * @return bool Whether the upgrade was successful or not.
+ */
 function xmldb_local_changeloglib_upgrade($oldversion) {
     global $DB;
     $dbman = $DB->get_manager();

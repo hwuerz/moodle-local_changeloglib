@@ -34,6 +34,9 @@ require_once(dirname(__FILE__) . '/../definitions.php');
  * Backup Lib.
  *
  * A library to manage backups of moodle files.
+ *
+ * @copyright (c) 2017 Hendrik Wuerz
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class local_changeloglib_backup_lib {
 
@@ -53,6 +56,7 @@ class local_changeloglib_backup_lib {
     const BACKUP_COMPONENT = LOCAL_CHANGELOGLIB_NAME;
 
     /**
+     * Creates a new backup based on the passed parameters.
      * @param array $data Additional data which is used to identify a definite predecessor.
      * @param int $context_id_from The context ID of the file which should be backuped
      * @param string $component_from The component of the file which should be backuped
@@ -67,7 +71,7 @@ class local_changeloglib_backup_lib {
         global $DB;
         $fs = get_file_storage();
 
-        // Get the file which will be deleted right now
+        // Get the file which will be deleted right now.
         $area_files = $fs->get_area_files(
             $context_id_from,
             $component_from,
@@ -76,9 +80,9 @@ class local_changeloglib_backup_lib {
             'sortorder DESC, id ASC',
             false);
 
-        foreach ($area_files as $file) { // Iterate all files found
+        foreach ($area_files as $file) { // Iterate all files found.
 
-            // Store a reference for this file in the plugin table
+            // Store a reference for this file in the plugin table.
             $id = $DB->insert_record(self::BACKUP_TABLE, (object)array(
                 'context' => $context_id_to,
                 'scope' => $scope_id,
@@ -86,7 +90,7 @@ class local_changeloglib_backup_lib {
                 'timestamp' => time()
             ), true);
 
-            // Create a copy of the file and store is under the given ID
+            // Create a copy of the file and store is under the given ID.
             $file_info = array(
                 'contextid' => $context_id_to,
                 'component' => self::BACKUP_COMPONENT,
@@ -94,7 +98,7 @@ class local_changeloglib_backup_lib {
                 'itemid' => $id);
             try {
                 $fs->create_file_from_storedfile($file_info, $file);
-            } catch (Exception $exception) { // Unknown error --> rollback
+            } catch (Exception $exception) { // Unknown error --> rollback.
                 $DB->delete_records(self::BACKUP_TABLE, array('id' => $id));
             }
 
@@ -135,22 +139,22 @@ class local_changeloglib_backup_lib {
     private static function clean_up_files($select, $params = null) {
         global $DB;
 
-        // Get the references to the files
+        // Get the references to the files.
         $records = $DB->get_records_select(self::BACKUP_TABLE, $select, $params);
 
-        // Get the file instances for the records
+        // Get the file instances for the records.
         foreach ($records as $record) {
-            // Delete the file (The loop should only be iterated once)
+            // Delete the file (The loop should only be iterated once).
             foreach (self::get_backup_files($record) as $file) {
                 try {
                     $file->delete();
-                } catch (Exception $exception) { // This file is not reachable for any reason
+                } catch (Exception $exception) { // This file is not reachable for any reason.
                     continue;
                 }
             }
         }
 
-        // Delete the reference in the database
+        // Delete the reference in the database.
         $DB->delete_records_select(self::BACKUP_TABLE, $select, $params);
     }
 
@@ -178,6 +182,6 @@ class local_changeloglib_backup_lib {
      */
     public static function get_backup_file($backup) {
         $files = self::get_backup_files($backup);
-        return array_shift($files); // Get only the first file
+        return array_shift($files); // Get only the first file.
     }
 }

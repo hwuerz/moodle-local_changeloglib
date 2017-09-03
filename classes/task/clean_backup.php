@@ -32,15 +32,29 @@ defined('MOODLE_INTERNAL') || die;
 
 require_once(dirname(__FILE__) . '/../../definitions.php');
 
+/**
+ * Class clean_backup.
+ * Defines a task to remove old backups which are not required any longer.
+ * @copyright (c) 2017 Hendrik Wuerz
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 class clean_backup extends \core\task\scheduled_task {
+
+    /**
+     * Get the name of this task.
+     * @return string The name of the task.
+     */
     public function get_name() {
-        // Shown in admin screens
+        // Shown in admin screens.
         return get_string('deletion_backup_clean_task', LOCAL_CHANGELOGLIB_NAME);
     }
 
+    /**
+     * Executes the task. Removes all unused backups.
+     */
     public function execute() {
 
-        // Delete old backup files for changelog generation
+        // Delete old backup files for changelog generation.
         require_once(dirname(__FILE__).'/../backup_lib.php');
         \local_changeloglib_backup_lib::clean_up_old_files();
 

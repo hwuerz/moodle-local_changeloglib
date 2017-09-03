@@ -33,6 +33,8 @@ require_once(dirname(__FILE__) . '/backup_lib.php');
 
 /**
  * Checks whether one file is an update of another.
+ * @copyright (c) 2017 Hendrik Wuerz
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class local_changeloglib_update_detector {
 
@@ -159,12 +161,12 @@ class local_changeloglib_update_detector {
 
         $candidate = $this->get_best_candidate();
 
-        // No candidate was found
+        // No candidate was found.
         if ($candidate == null) {
             return false;
         }
 
-        // Threshold: If the candidate similarity is lower this value is is not a predecessor
+        // Threshold: If the candidate similarity is lower this value is is not a predecessor.
         if ($candidate->similarity < $this->min_similarity) {
             return false;
         }
@@ -223,13 +225,13 @@ class local_changeloglib_update_detector {
         foreach ($this->candidates as $candidate) {
             $data = json_decode($candidate->data, true);
             $is_equal = true;
-            foreach ($this->new_data as $key => $value) { // Check each data attribute of the current file
+            foreach ($this->new_data as $key => $value) { // Check each data attribute of the current file.
                 if ($data[$key] != $value) {
                     $is_equal = false;
                     break;
                 }
             }
-            if ($is_equal) { // The candidate is a valid predecessor
+            if ($is_equal) { // The candidate is a valid predecessor.
                 $file = local_changeloglib_backup_lib::get_backup_file($candidate);
                 $definite_predecessors[] = $file;
             }
@@ -247,7 +249,7 @@ class local_changeloglib_update_detector {
      */
     private function get_best_meta_candidate() {
 
-        // Get the file instances for pending candidates
+        // Get the file instances for pending candidates.
         /** @var stored_file[] $candidate_stored_files */
         $candidate_stored_files = array_map(function ($candidate) {
             return local_changeloglib_backup_lib::get_backup_file($candidate);
@@ -266,14 +268,14 @@ class local_changeloglib_update_detector {
      */
     private function check_candidates($candidate_files) {
 
-        // Store the data of the best candidate
+        // Store the data of the best candidate.
         $best_candidate = -1;
         $best_similarity = 0;
 
-        // Check each candidate whether it is the best
+        // Check each candidate whether it is the best.
         foreach ($candidate_files as $key => $candidate_file) {
 
-            // The types of the files must match
+            // The types of the files must match.
             $fitting_mime_type = $this->new_file->get_mimetype() == $candidate_file->get_mimetype();
 
             // The MIME types do not match and this detector should ensure, that they do.
@@ -281,12 +283,12 @@ class local_changeloglib_update_detector {
                 continue;
             }
 
-            // The similarity in the range [0, 1]
+            // The similarity in the range [0, 1].
             $similarity = self::calculate_meta_similarity($this->new_file, $candidate_file);
 
             // Check for soft handling of MIME-Types
             if (!$this->ensure_mime_type) { // This detector should not ensure the MIMe-Types...
-                if ($fitting_mime_type) { // ... but they fit --> Increase the similarity
+                if ($fitting_mime_type) { // ... but they fit --> Increase the similarity.
                     $similarity += 1;
                 }
                 // The similarity should be in the range [0, 1] again. If the detector does not ensure MIME Types
@@ -294,18 +296,18 @@ class local_changeloglib_update_detector {
                 $similarity /= 2;
             }
 
-            if ($similarity > $best_similarity) { // This candidate is the best until now
+            if ($similarity > $best_similarity) { // This candidate is the best until now.
                 $best_candidate = $key;
                 $best_similarity = $similarity;
             }
         }
 
-        // No candidate fits
+        // No candidate fits.
         if ($best_candidate < 0) {
             return null;
         }
 
-        // Build a response object based on the calculated similarity
+        // Build a response object based on the calculated similarity.
         $response = new stdClass();
         $response->similarity = $best_similarity;
         $response->file = $candidate_files[$best_candidate];
@@ -325,20 +327,20 @@ class local_changeloglib_update_detector {
         $key_similarity = 1;
         $factors = array();
 
-        // How similar are the file names
+        // How similar are the file names.
         $filename = self::levenshtein_realtive($original->get_filename(), $candidate->get_filename());
         $factors[] = array($key_weight => 1, $key_similarity => $filename);
 
-        // How similar is the file size
+        // How similar is the file size.
         $filesize = self::number_similarity_realtive($original->get_filesize(), $candidate->get_filesize());
         $factors[] = array($key_weight => 1, $key_similarity => $filesize);
 
         // How many minutes ago the candidate was deleted
-        // Until one minute (= 60 sec) the similarity will not decrease
+        // Until one minute (= 60 sec) the similarity will not decrease.
         $deletion_time = 1 / (1 + 0.01 * ( time() - $candidate->get_timemodified()));
         $factors[] = array($key_weight => 0.5, $key_similarity => $deletion_time);
 
-        // Sum up all factors with their weights
+        // Sum up all factors with their weights.
         $weight_sum = 0;
         $similarity_sum = 0;
         foreach ($factors as $factor) {

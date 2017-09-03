@@ -35,6 +35,6 @@ $plugin->component = 'local_changeloglib';
 $plugin->release = '0.2.0';
 $plugin->maturity = MATURITY_ALPHA;
 
-// Version format:  YYYYMMDDXX
+// Version format:  YYYYMMDDXX.
 $plugin->version = 2017090200;
 $plugin->requires = 2017051500;
