@@ -37,3 +37,16 @@ Installation
 1. Clone this repository
 2. Copy plugin to `MOODLE_HOME/local/changeloglib`
 3. Browse to Site Administration -> Notifications and allow the database upgrades to execute
+
+Tests
+------
+
+This plugin provides tests for the main functions. To run them please follow the next steps:
+
+1. Install PHPUnit on your system and configure moodle. See [https://docs.moodle.org/dev/PHPUnit](https://docs.moodle.org/dev/PHPUnit) for more information.
+2. Install the plugin.
+3. Run the tests
+    ```bash
+    cd /path/to/moodle/home
+    vendor/bin/phpunit --group local_changeloglib
+    ``` 
