@@ -338,7 +338,7 @@ class local_changeloglib_update_detector {
 
         // How many minutes ago the candidate was deleted
         // Until one minute (= 60 sec) the similarity will not decrease.
-        $deletion_time = 0.5 / (1 + 0.01 * ( time() - $candidate->get_timemodified()));
+        $deletion_time = 1 / (1 + 0.01 * ( time() - $candidate->get_timemodified()));
         $factors[] = array($key_weight => 0.5, $key_similarity => $deletion_time);
 
         // Sum up all factors with their weights.
@@ -346,7 +346,7 @@ class local_changeloglib_update_detector {
         $similarity_sum = 0;
         foreach ($factors as $factor) {
             $weight_sum += $factor[$key_weight];
-            $similarity_sum += $factor[$key_similarity];
+            $similarity_sum += $factor[$key_weight] * $factor[$key_similarity];
         }
         return $similarity_sum / $weight_sum;
     }
