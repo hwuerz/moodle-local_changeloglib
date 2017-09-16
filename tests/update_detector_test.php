@@ -241,6 +241,28 @@ class local_changeloglib_update_detector_test extends advanced_testcase {
     }
 
     /**
+     * The file itself is not found as a predecessor.
+     * If the same file is a candidate, the detector must return false.
+     * Otherwise simple save-operations would trigger unwanted updates.
+     */
+    public function test_update_detection_find_itself() {
+        $this->resetAfterTest(true);
+        $this->prepare_coursemodules();
+
+        // Backup old files.
+        local_changeloglib_test_helper::backup($this->file->file);
+        local_changeloglib_test_helper::backup($this->file_v2->file);
+
+        // Detect predecessor of file (!) not file_v2.
+        $detector = new local_changeloglib_update_detector($this->file->file,
+            array(), context_system::instance()->id, -1, array());
+        $predecessor = $detector->is_update();
+
+        // Check predecessor.
+        $this->assertFalse($predecessor); // No predecessor was found.
+    }
+
+    /**
      * Creates a course and two course modules.
      */
     private function prepare_coursemodules() {
