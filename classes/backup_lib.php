@@ -133,6 +133,14 @@ class local_changeloglib_backup_lib {
     }
 
     /**
+     * Delete the backup with the passed ID. This ID is the primary key in the database and the itemid of the file instance.
+     * @param int $backup_id The ID in the backup table which should be deleted.
+     */
+    public static function clean_up_id($backup_id) {
+        self::clean_up_files('id = ?', array($backup_id));
+    }
+
+    /**
      * Deletes all backup files which fulfill the passed select query.
      * @param string $select The DB query to select the files which should be deleted
      * @param null $params The params to the select statement.

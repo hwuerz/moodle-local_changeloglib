@@ -40,6 +40,13 @@ require_once(dirname(__FILE__) . '/backup_lib.php');
 class local_changeloglib_update_detector {
 
     /**
+     * The file instance of the found predecessor. False if no fitting candidate exists or the search is not completed yet.
+     * This variable is only set after is_update() was called.
+     * @var stored_file|false
+     */
+    private $predecessor = false;
+
+    /**
      * The file instance for the new file whose predecessor should be found.
      * @var stored_file $new_file
      */
@@ -180,7 +187,22 @@ class local_changeloglib_update_detector {
             return false;
         }
 
-        return $candidate->file;
+        $this->predecessor = $candidate->file;
+        return $this->predecessor;
+    }
+
+    /**
+     * Deletes the backup of the found predecessor.
+     * This avoids a reuse of this file.
+     * Call this function if one document can not have multiple successors.
+     * @return bool Whether deletion was successful.
+     */
+    public function delete_found_predecessor() {
+        if ($this->predecessor) { // The predecessor was found.
+            local_changeloglib_backup_lib::clean_up_id($this->predecessor->get_itemid());
+            return true;
+        }
+        return false;
     }
 
     /**
