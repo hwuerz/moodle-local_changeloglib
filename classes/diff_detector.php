@@ -67,8 +67,8 @@ class local_changeloglib_diff_detector {
 
     /**
      * local_changeloglib_diff_detector constructor.
-     * @param string $first_file The filename for the first text document.
-     * @param string $second_file The filename for the second text document.
+     * @param string $first_file The filename and path for the first text document.
+     * @param string $second_file The filename and path for the second text document.
      */
     public function __construct($first_file, $second_file) {
         $this->file[0] = $first_file;
@@ -99,6 +99,8 @@ class local_changeloglib_diff_detector {
 
     /**
      * Checks whether there are more changes than allowed for a predecessor.
+     * Allowed means: Not more than half of the pages contains changes and not more than half of the lines in the
+     * documents are changed.
      * @return bool Whether the amount of changes allows this file as a predecessor.
      */
     public function has_acceptable_amount_of_changes() {

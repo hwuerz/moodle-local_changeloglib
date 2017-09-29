@@ -54,7 +54,7 @@ class local_changeloglib_pdftotext {
 
     /**
      * Tries to convert the passed file in a text document.
-     * Convertion is only possible if pdftotext is available and a PDF document was passed.
+     * Conversion is only possible if pdftotext is available and a PDF document was passed.
      * @param stored_file $file The file which should be converted.
      * @return bool|string Returns false if file could not be converted or a string with the path of the generated text file.
      */

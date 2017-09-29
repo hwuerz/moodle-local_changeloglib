@@ -133,6 +133,7 @@ class local_changeloglib_update_detector {
      * the MIME type of the new file.
      * If this value is true, all candidates with not matching type will be skipped.
      * If this value is false, the MIME Type will be handled as a similarity property.
+     * Default value is true.
      * @param bool $ensure_mime_type Whether the MIME type of the candidates must match or not.
      */
     public function set_ensure_mime_type($ensure_mime_type) {
@@ -142,7 +143,8 @@ class local_changeloglib_update_detector {
     /**
      * If the similarity is below this value, a file will be rejected as a predecessor.
      * Adjust this value to define a level of similarity you want to ensure.
-     * @param float $min_similarity The minimum similarity a predecessor must have.
+     * Default value is 0.5
+     * @param float $min_similarity The minimum similarity a predecessor must have in the range [0, 1].
      */
     public function set_min_similarity($min_similarity) {
         $this->min_similarity = $min_similarity;
