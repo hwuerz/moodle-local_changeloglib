@@ -50,7 +50,7 @@ Installation
 3. Clone the repo inside MOODLE_HOME/local/changeloglib
    ```bash
    cd path/to/moodle/home
-   git clone git@github.com:hwuerz/moodle-local_changeloglib.git local/changeloglib
+   git clone https://github.com/hwuerz/moodle-local_changeloglib.git local/changeloglib
    ```
 4. Browse to `Site Administration` -> `Notifications` and allow the database upgrades to execute
 
