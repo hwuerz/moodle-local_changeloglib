@@ -9,6 +9,8 @@ detection.
 
 Without any other plugins this will not do anything.
 
+This plugin is required by [Upload Notification](https://github.com/hwuerz/moodle-local_uploadnotification) and [Assign Submission Changes](https://github.com/hwuerz/moodle-assignsubmission_changes)
+
 License
 -------
 
@@ -35,17 +37,22 @@ Requirements
 Installation
 --------
 
-1. cd to `MOODLE_HOME`
-2. Clone the repo inside MOODLE_HOME/local/uploadnotification
+1. Install the package [poppler-utils](https://wiki.ubuntuusers.de/poppler-utils/) for difference detection. This step is optional but recommended. If you skip the installation, the difference detection will not be available.
+    ```bash
+    sudo apt install -y poppler-utils
+    pdftotext -h
+    ```
+    The last command should print the usage information for pdftotext. Please ensure that the installation was successful. 
+2. Ensure that the tool [diff](https://wiki.ubuntuusers.de/diff/) is installed on your system. It should be included in every Ubuntu or Linux distribution. The following command should print some help text. If it is not available please install it following the documentation for your system. This tool is optional but recommended. If it is not installed, the difference detection is not possible.
+    ```bash
+    diff --help
+    ```
+3. Clone the repo inside MOODLE_HOME/local/changeloglib
    ```bash
+   cd path/to/moodle/home
    git clone git@github.com:hwuerz/moodle-local_changeloglib.git local/changeloglib
    ```
-3. Browse to Site Administration -> Notifications and allow the database upgrades to execute
-
-
-1. Clone this repository
-2. Copy plugin to `MOODLE_HOME/local/changeloglib`
-3. Browse to `Site Administration` -> `Notifications` and allow the database upgrades to execute
+4. Browse to `Site Administration` -> `Notifications` and allow the database upgrades to execute
 
 Tests
 ------
