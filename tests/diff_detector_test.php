@@ -35,9 +35,12 @@ require_once(dirname(__FILE__) . '/../classes/diff_detector.php');
 
 /**
  * Class local_changeloglib_diff_detector_test.
+ *
  * vendor/bin/phpunit local_changeloglib_diff_detector_test local/changeloglib/tests/diff_detector_test.php
  * Checks the detection of changed pages and decision whether there are too many changes for a valid predecessor.
  *
+ * @copyright (c) 2017 Hendrik Wuerz
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  * @group local_changeloglib
  */
 class local_changeloglib_diff_detector_test extends advanced_testcase {

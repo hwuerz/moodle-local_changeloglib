@@ -34,7 +34,11 @@ require_once(dirname(__FILE__) . '/../classes/pdftotext.php');
 
 /**
  * Class local_changeloglib_test_helper.
+ *
  * Provides helper functions which are required by multiple tests.
+ *
+ * @copyright (c) 2017 Hendrik Wuerz
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class local_changeloglib_test_helper {
 

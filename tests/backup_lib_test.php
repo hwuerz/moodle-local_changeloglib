@@ -35,6 +35,7 @@ require_once(dirname(__FILE__) . '/../classes/backup_lib.php');
 
 /**
  * Class local_changeloglib_backup_test.
+ *
  * vendor/bin/phpunit local_changeloglib_backup_lib_test local/changeloglib/tests/backup_lib_test.php
  *
  * Creates a new course module resource.
@@ -43,6 +44,8 @@ require_once(dirname(__FILE__) . '/../classes/backup_lib.php');
  * -> Checks correct data in Backup table.
  * -> Checks that cleaning old files work correctly.
  *
+ * @copyright (c) 2017 Hendrik Wuerz
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  * @group local_changeloglib
  */
 class local_changeloglib_backup_lib_test extends advanced_testcase {

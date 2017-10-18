@@ -36,8 +36,11 @@ require_once(dirname(__FILE__) . '/../classes/diff_detector.php');
 
 /**
  * Class local_changeloglib_update_detector_test.
+ *
  * vendor/bin/phpunit local_changeloglib_update_detector_test local/changeloglib/tests/update_detector_test.php
  *
+ * @copyright (c) 2017 Hendrik Wuerz
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  * @group local_changeloglib
  *
  */

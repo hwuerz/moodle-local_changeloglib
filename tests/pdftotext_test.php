@@ -35,10 +35,13 @@ require_once(dirname(__FILE__) . '/../classes/pdftotext.php');
 
 /**
  * Class local_changeloglib_pdftotext_test.
+ *
  * vendor/bin/phpunit local_changeloglib_pdftotext_test local/changeloglib/tests/pdftotext_test.php
  *
  * Tries to convert a pdf file to a text file. If possible -> check for correct result
  *
+ * @copyright (c) 2017 Hendrik Wuerz
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  * @group local_changeloglib
  */
 class local_changeloglib_pdftotext_test extends advanced_testcase {
