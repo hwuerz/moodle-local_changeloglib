@@ -99,30 +99,17 @@ class local_changeloglib_diff_detector {
 
     /**
      * Checks whether there are more changes than allowed for a predecessor.
-     * Allowed means: Not more than half of the pages contains changes and not more than half of the lines in the
-     * documents are changed.
+     * Allowed means: Not more than half of the lines in the documents are changed.
      * @return bool Whether the amount of changes allows this file as a predecessor.
      */
     public function has_acceptable_amount_of_changes() {
         $changes = 0; // How many changes were detected in the document (line based).
-        $changed_pages = 0; // How many pages were changed.
-        $total_pages = 0; // How many pages do exist in the document.
         foreach ($this->page_changes_counter[1] as $page => $amount) {
             $changes += $amount;
-            $total_pages++;
-            if ($amount > 0) {
-                $changed_pages++;
-            }
         }
 
-        // Get the ratio of changed LINES compared to the total amount of lines.
+        // Get the ratio of changed lines compared to the total amount of lines.
         $ratio = $changes / ($this->number_of_lines[1] + 1); // +1 to avoid division through zero.
-        if ($ratio > 0.5) { // Too many lines have been changed --> This was not a real predecessor.
-            return false;
-        }
-
-        // Get the ratio of changed PAGES compared to the total amount of pages.
-        $ratio = $changed_pages / ($total_pages + 1); // +1 to avoid division through zero.
         if ($ratio > 0.5) { // Too many lines have been changed --> This was not a real predecessor.
             return false;
         }
