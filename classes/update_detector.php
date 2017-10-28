@@ -165,7 +165,10 @@ class local_changeloglib_update_detector {
 
     /**
      * Check whether the new file is an update of an older version.
-     * @return bool|stored_file False if this is not an update of an earlier file. The previous version of this file if found.
+     * @return bool|int|stored_file
+     *          False if this is not an update of an earlier file.
+     *          -1 if this file already exists.
+     *          The previous version of this file if found.
      */
     public function is_update() {
 
@@ -181,15 +184,17 @@ class local_changeloglib_update_detector {
             return false;
         }
 
+        // A fitting predecessor was found --> Store it.
+        $this->predecessor = $candidate->file;
+
         // Check whether the files are identically.
         // The detector might be called if a module becomes updated. In this case it is possible, that only meta information
         // were changed and the file itself is the same as before. In this case it must not be recognized as an update
         // of itself.
         if ($this->new_file->get_contenthash() == $candidate->file->get_contenthash()) {
-            return false;
+            return -1;
         }
 
-        $this->predecessor = $candidate->file;
         return $this->predecessor;
     }
 
