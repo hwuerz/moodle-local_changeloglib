@@ -47,10 +47,15 @@ class local_changeloglib_update_detector {
     private $predecessor = false;
 
     /**
+     * @var local_changeloglib_new_file_wrapper[]
+     */
+    private $new_files;
+
+    /**
      * The file instance for the new file whose predecessor should be found.
      * @var stored_file $new_file
      */
-    private $new_file;
+//    private $new_file;
 
     /**
      * The data with additional information of the current file whose predecessor should be found.
@@ -77,12 +82,12 @@ class local_changeloglib_update_detector {
      * This might be used for deletion in progress files.
      * @var stored_file[]
      */
-    private $further_candidates;
+//    private $further_candidates;
 
     /**
      * @var array All records in the backup table which are relevant as a predecessor.
      */
-    private $candidates;
+    private $backups;
 
     /**
      * Whether this detector should ensure that the MIME type of the found predecessor matches
@@ -110,23 +115,74 @@ class local_changeloglib_update_detector {
      * @param stored_file[] $further_candidates All other files which should be checked as predecessor.
      *                                          Use this for deletion in progress.
      */
-    public function __construct(stored_file $new_file, array $new_data, $context, $scope, array $further_candidates) {
-        $this->new_file = $new_file;
-        $this->new_data = $new_data;
+//    public function __construct(stored_file $new_file, array $new_data, $context, $scope, array $further_candidates) {
+//        $this->new_file = $new_file;
+//        $this->new_data = $new_data;
+//        $this->context = $context;
+//        $this->scope = $scope;
+//        $this->further_candidates = $further_candidates;
+//
+//        $this->candidates = $this->get_candidates();
+//    }
+
+    /**
+     * local_changeloglib_update_detector constructor.
+     * @param local_changeloglib_new_file_wrapper[] $new_files The new files whose predecessors should be found.
+     * @param int $context The context of the file and its predecessor. (Resources: The course context)
+     * @param int $scope The scope of the file and its predecessor within the context. (In courses: the section)
+     * @param stored_file[] $further_candidates All other files which should be checked as predecessor.
+     *                                          Use this for deletion in progress.
+     */
+    public function __construct(array $new_files, $context, $scope, array $further_candidates) {
+        $this->new_files = $new_files;
         $this->context = $context;
         $this->scope = $scope;
-        $this->further_candidates = $further_candidates;
 
-        $this->candidates = $this->get_candidates();
+        $this->backups = $this->get_backups($further_candidates);
+    }
+
+    public function map_backups() {
+        $this->calculate_similarity(); // All $this->new_files have predecessor_candidates.
+        $this->map_backups_rec();
+    }
+
+    public function map_backups_rec($current_similarity) {
+
+        // Get the first element in the new files array.
+        $current_new_file = null;
+        $current_index = -1;
+        foreach($this->new_files as $key => $new_file) { // Get first element via forach to get the key as well.
+            $current_new_file = $new_file;
+            $current_index = $key;
+            break;
+        }
+
+        // Remove this file from the array to avoid access in recursion
+        unset($this->new_files[$current_index]);
+
+        // Iterate all possible predecessors.
+        foreach ($current_new_file->get_predecessor_candidates() as $predecessor_candidate) {
+            // Check whether this backup was already used by another new file.
+            if ($predecessor_candidate->get_backup()->is_used()) {
+                continue;
+            }
+
+            // Calculate total similarity if this file uses the current predecessor.
+            $predecessor_candidate->get_backup()->set_is_used(true);
+
+            
+            $predecessor_candidate->get_similarity();
+
+        }
     }
 
     /**
      * Get the new file.
      * @return stored_file The new file.
      */
-    public function get_new_file() {
-        return $this->new_file;
-    }
+//    public function get_new_file() {
+//        return $this->new_file;
+//    }
 
     /**
      * Whether this detector should ensure that the MIME type of the found predecessor matches
@@ -152,15 +208,66 @@ class local_changeloglib_update_detector {
 
     /**
      * Get all backups stored with the same context and scope.
-     * @return array The available records.
+     * @param stored_file[] $further_candidates All other files which are available and not in a backup.
+     * @return local_changeloglib_backup_wrapper[] All available backups.
      */
-    private function get_candidates() {
+    private function get_backups($further_candidates) {
         global $DB;
 
-        return $DB->get_records(local_changeloglib_backup_lib::BACKUP_TABLE, array(
+        $records = $DB->get_records(local_changeloglib_backup_lib::BACKUP_TABLE, array(
             'context' => $this->context,
             'scope' => $this->scope
         ), 'timestamp DESC');
+
+        // Get the stored_file objects for all records.
+        $backups = array();
+        foreach ($records as $record) {
+            $file = local_changeloglib_backup_lib::get_backup_file($record);
+            $backups[] = new local_changeloglib_backup_wrapper($record, $file);
+        }
+
+        // Add the further candidates.
+        foreach ($further_candidates as $further_candidate) {
+            $backups[] = new local_changeloglib_backup_wrapper(null, $further_candidate);
+        }
+
+        return $backups;
+    }
+
+    /**
+     * Calculate the similarity for all new files to all available backups.
+     */
+    private function calculate_similarity() {
+        foreach ($this->new_files as $new_file) { // Iterate all new files and ...
+            // ... check the similarity to all backups.
+            $new_file->check_candidates($this->backups, $this->ensure_mime_type, $this->min_similarity);
+        }
+    }
+
+    private function map_backups($mapping, $similarity, $unmapped_files, $unmapped_backups) {
+
+        if (empty($unmapped_files)) { // All files have a mapping to a backup --> Terminate.
+            return;
+        }
+
+        foreach ($unmapped_files as $file_key => $file) {
+
+            // Whether this file has minimum one definit predecessor in the backup set.
+            $has_definite_predecessor = false;
+
+            foreach ($unmapped_backups as $backup_key => $backup) {
+
+                $backup_is_definit_predecessor = is_definit_predecessor($file, $backup);
+                $has_definite_predecessor = $has_definite_predecessor || $backup_is_definit_predecessor;
+
+                // Check whether this backup can be used.
+                if (!$has_definite_predecessor || $backup_is_definit_predecessor) {
+                    // TODO Calc diff
+                }
+            }
+
+        }
+
     }
 
     /**
@@ -252,7 +359,7 @@ class local_changeloglib_update_detector {
         $definite_predecessors = array();
 
         // Iterate candidates to check if it is a predecessor.
-        foreach ($this->candidates as $candidate) {
+        foreach ($this->backups as $candidate) {
             $data = json_decode($candidate->data, true);
             $is_equal = true;
             foreach ($this->new_data as $key => $value) { // Check each data attribute of the current file.
@@ -283,7 +390,7 @@ class local_changeloglib_update_detector {
         /** @var stored_file[] $candidate_stored_files */
         $candidate_stored_files = array_map(function ($candidate) {
             return local_changeloglib_backup_lib::get_backup_file($candidate);
-        }, $this->candidates);
+        }, $this->backups);
         $candidate_files = array_merge($candidate_stored_files, $this->further_candidates);
 
         return $this->check_candidates($candidate_files);
@@ -291,22 +398,23 @@ class local_changeloglib_update_detector {
 
     /**
      * Checks all passed files. Returns the best ob them with the calculated similarity.
+     * @param local_changeloglib_new_file_wrapper $new_file The new file whose predecessor should be found.
      * @param stored_file[] $candidate_files
      * @return null|stdClass
      * Null is returned if no candidate fits.
      * The stdClass contains the calculated similarity and the `stored_file` of the best candidate
      */
-    private function check_candidates($candidate_files) {
+    private function check_candidates($new_file, $candidate_files) {
 
         // Store the data of the best candidate.
-        $best_candidate = -1;
-        $best_similarity = 0;
+//        $best_candidate = -1;
+//        $best_similarity = 0;
 
         // Check each candidate whether it is the best.
         foreach ($candidate_files as $key => $candidate_file) {
 
             // The types of the files must match.
-            $fitting_mime_type = $this->new_file->get_mimetype() == $candidate_file->get_mimetype();
+            $fitting_mime_type = $new_file->get_file()->get_mimetype() == $candidate_file->get_mimetype();
 
             // The MIME types do not match and this detector should ensure, that they do.
             if ($this->ensure_mime_type && !$fitting_mime_type) {
@@ -326,22 +434,23 @@ class local_changeloglib_update_detector {
                 $similarity /= 2;
             }
 
-            if ($similarity > $best_similarity) { // This candidate is the best until now.
-                $best_candidate = $key;
-                $best_similarity = $similarity;
-            }
+            $new_file->add_predecessor_candidate($candidate_file);
+//            if ($similarity > $best_similarity) { // This candidate is the best until now.
+//                $best_candidate = $key;
+//                $best_similarity = $similarity;
+//            }
         }
 
-        // No candidate fits.
-        if ($best_candidate < 0) {
-            return null;
-        }
-
-        // Build a response object based on the calculated similarity.
-        $response = new stdClass();
-        $response->similarity = $best_similarity;
-        $response->file = $candidate_files[$best_candidate];
-        return $response;
+//        // No candidate fits.
+//        if ($best_candidate < 0) {
+//            return null;
+//        }
+//
+//        // Build a response object based on the calculated similarity.
+//        $response = new stdClass();
+//        $response->similarity = $best_similarity;
+//        $response->file = $candidate_files[$best_candidate];
+//        return $response;
     }
 
     /**
