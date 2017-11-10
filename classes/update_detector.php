@@ -141,39 +141,79 @@ class local_changeloglib_update_detector {
         $this->backups = $this->get_backups($further_candidates);
     }
 
+    /**
+     * Maps the backups to a new file.
+     * @return local_changeloglib_update_detector_distribution The best distribution of backups for the new files.
+     */
     public function map_backups() {
         $this->calculate_similarity(); // All $this->new_files have predecessor_candidates.
-        $this->map_backups_rec();
+        return $this->map_backups_rec();
     }
 
-    public function map_backups_rec($current_similarity) {
+
+    /**
+     * Maps the backups to a new file.
+     * @return local_changeloglib_update_detector_distribution The best distribution of backups for the new files.
+     */
+    private function map_backups_rec() {
 
         // Get the first element in the new files array.
         $current_new_file = null;
         $current_index = -1;
-        foreach($this->new_files as $key => $new_file) { // Get first element via forach to get the key as well.
+        foreach ($this->new_files as $key => $new_file) { // Get first element via foreach to get the key as well.
             $current_new_file = $new_file;
             $current_index = $key;
             break;
         }
 
-        // Remove this file from the array to avoid access in recursion
+        // Terminate as soon as no files are left.
+        if ($current_new_file == null) {
+            return new local_changeloglib_update_detector_distribution(array(), 0);
+        }
+
+        // Remove this file from the array to avoid access in recursion.
         unset($this->new_files[$current_index]);
 
-        // Iterate all possible predecessors.
+        // First option: This file is not an update and has therefore no backup.
+        // --> Directly make recursive call.
+        $best_distribution = $this->map_backups_rec();
+
+        // Second option: This file is an update.
+        // --> Test all combinations recursively.
         foreach ($current_new_file->get_predecessor_candidates() as $predecessor_candidate) {
+
             // Check whether this backup was already used by another new file.
             if ($predecessor_candidate->get_backup()->is_used()) {
                 continue;
             }
 
-            // Calculate total similarity if this file uses the current predecessor.
+            // Block the usage of this backup for other files.
             $predecessor_candidate->get_backup()->set_is_used(true);
 
-            
-            $predecessor_candidate->get_similarity();
+            // Call function recursively to get the best distribution of the files left.
+            $recursive_distribution = $this->map_backups_rec();
 
+            // Calculate the mapping and similarity for 'This file' <-> 'This Backup'.
+            $current_mapping = new local_changeloglib_update_detector_mapping($current_new_file, $predecessor_candidate);
+            $current_similarity = $predecessor_candidate->get_similarity();
+            // Add this mapping to the recursive distribution --> Allows comparision with best_distribution.
+            $recursive_distribution->add_mapping($current_mapping, $current_similarity);
+
+            // Check whether this combination leads to a better similarity.
+            if ($recursive_distribution->is_better_than($best_distribution)) {
+                $best_distribution = $recursive_distribution;
+            }
+
+            // The backup can be used again in another recursive path.
+            $predecessor_candidate->get_backup()->set_is_used(false);
         }
+
+        // Add this file again to the array so it can be accessed later.
+        $this->new_files[$current_index] = $current_new_file;
+
+        // Return the best distribution.
+        // This can contain a mapping for the current file or not respectively what is better.
+        return $best_distribution;
     }
 
     /**
@@ -242,32 +282,6 @@ class local_changeloglib_update_detector {
             // ... check the similarity to all backups.
             $new_file->check_candidates($this->backups, $this->ensure_mime_type, $this->min_similarity);
         }
-    }
-
-    private function map_backups($mapping, $similarity, $unmapped_files, $unmapped_backups) {
-
-        if (empty($unmapped_files)) { // All files have a mapping to a backup --> Terminate.
-            return;
-        }
-
-        foreach ($unmapped_files as $file_key => $file) {
-
-            // Whether this file has minimum one definit predecessor in the backup set.
-            $has_definite_predecessor = false;
-
-            foreach ($unmapped_backups as $backup_key => $backup) {
-
-                $backup_is_definit_predecessor = is_definit_predecessor($file, $backup);
-                $has_definite_predecessor = $has_definite_predecessor || $backup_is_definit_predecessor;
-
-                // Check whether this backup can be used.
-                if (!$has_definite_predecessor || $backup_is_definit_predecessor) {
-                    // TODO Calc diff
-                }
-            }
-
-        }
-
     }
 
     /**
@@ -396,117 +410,204 @@ class local_changeloglib_update_detector {
         return $this->check_candidates($candidate_files);
     }
 
-    /**
-     * Checks all passed files. Returns the best ob them with the calculated similarity.
-     * @param local_changeloglib_new_file_wrapper $new_file The new file whose predecessor should be found.
-     * @param stored_file[] $candidate_files
-     * @return null|stdClass
-     * Null is returned if no candidate fits.
-     * The stdClass contains the calculated similarity and the `stored_file` of the best candidate
-     */
-    private function check_candidates($new_file, $candidate_files) {
-
-        // Store the data of the best candidate.
-//        $best_candidate = -1;
-//        $best_similarity = 0;
-
-        // Check each candidate whether it is the best.
-        foreach ($candidate_files as $key => $candidate_file) {
-
-            // The types of the files must match.
-            $fitting_mime_type = $new_file->get_file()->get_mimetype() == $candidate_file->get_mimetype();
-
-            // The MIME types do not match and this detector should ensure, that they do.
-            if ($this->ensure_mime_type && !$fitting_mime_type) {
-                continue;
-            }
-
-            // The similarity in the range [0, 1].
-            $similarity = self::calculate_meta_similarity($this->new_file, $candidate_file);
-
-            // Check for soft handling of MIME-Types
-            if (!$this->ensure_mime_type) { // This detector should not ensure the MIMe-Types...
-                if ($fitting_mime_type) { // ... but they fit --> Increase the similarity.
-                    $similarity += 1;
-                }
-                // The similarity should be in the range [0, 1] again. If the detector does not ensure MIME Types
-                // and the types do not match, the similarity will decrease.
-                $similarity /= 2;
-            }
-
-            $new_file->add_predecessor_candidate($candidate_file);
-//            if ($similarity > $best_similarity) { // This candidate is the best until now.
-//                $best_candidate = $key;
-//                $best_similarity = $similarity;
+//    /**
+//     * Checks all passed files. Returns the best ob them with the calculated similarity.
+//     * @param local_changeloglib_new_file_wrapper $new_file The new file whose predecessor should be found.
+//     * @param stored_file[] $candidate_files
+//     * @return null|stdClass
+//     * Null is returned if no candidate fits.
+//     * The stdClass contains the calculated similarity and the `stored_file` of the best candidate
+//     */
+//    private function check_candidates($new_file, $candidate_files) {
+//
+//        // Store the data of the best candidate.
+////        $best_candidate = -1;
+////        $best_similarity = 0;
+//
+//        // Check each candidate whether it is the best.
+//        foreach ($candidate_files as $key => $candidate_file) {
+//
+//            // The types of the files must match.
+//            $fitting_mime_type = $new_file->get_file()->get_mimetype() == $candidate_file->get_mimetype();
+//
+//            // The MIME types do not match and this detector should ensure, that they do.
+//            if ($this->ensure_mime_type && !$fitting_mime_type) {
+//                continue;
 //            }
-        }
-
-//        // No candidate fits.
-//        if ($best_candidate < 0) {
-//            return null;
+//
+//            // The similarity in the range [0, 1].
+//            $similarity = self::calculate_meta_similarity($this->new_file, $candidate_file);
+//
+//            // Check for soft handling of MIME-Types
+//            if (!$this->ensure_mime_type) { // This detector should not ensure the MIMe-Types...
+//                if ($fitting_mime_type) { // ... but they fit --> Increase the similarity.
+//                    $similarity += 1;
+//                }
+//                // The similarity should be in the range [0, 1] again. If the detector does not ensure MIME Types
+//                // and the types do not match, the similarity will decrease.
+//                $similarity /= 2;
+//            }
+//
+//            $new_file->add_predecessor_candidate($candidate_file);
+////            if ($similarity > $best_similarity) { // This candidate is the best until now.
+////                $best_candidate = $key;
+////                $best_similarity = $similarity;
+////            }
 //        }
 //
-//        // Build a response object based on the calculated similarity.
-//        $response = new stdClass();
-//        $response->similarity = $best_similarity;
-//        $response->file = $candidate_files[$best_candidate];
-//        return $response;
+////        // No candidate fits.
+////        if ($best_candidate < 0) {
+////            return null;
+////        }
+////
+////        // Build a response object based on the calculated similarity.
+////        $response = new stdClass();
+////        $response->similarity = $best_similarity;
+////        $response->file = $candidate_files[$best_candidate];
+////        return $response;
+//    }
+
+//    /**
+//     * Calculates the similarity of the passed files based on meta information.
+//     * This means, the content will not become analysed.
+//     * @param stored_file $original The original file which is now uploaded
+//     * @param stored_file $candidate An candidate which might be a predecessor of the file.
+//     * @return float The similarity of the two files based on meta information. Value in range [0,1]
+//     */
+//    private static function calculate_meta_similarity(stored_file $original, stored_file $candidate) {
+//
+//        $key_weight = 0;
+//        $key_similarity = 1;
+//        $factors = array();
+//
+//        // How similar are the file names.
+//        $filename = self::levenshtein_realtive($original->get_filename(), $candidate->get_filename());
+//        $factors[] = array($key_weight => 1, $key_similarity => $filename);
+//
+//        // How similar is the file size.
+//        $filesize = self::number_similarity_realtive($original->get_filesize(), $candidate->get_filesize());
+//        $factors[] = array($key_weight => 1, $key_similarity => $filesize);
+//
+//        // How many minutes ago the candidate was deleted
+//        // Until one minute (= 60 sec) the similarity will not decrease.
+//        $deletion_time = 1 / (1 + 0.01 * ( time() - $candidate->get_timemodified()));
+//        $factors[] = array($key_weight => 0.5, $key_similarity => $deletion_time);
+//
+//        // Sum up all factors with their weights.
+//        $weight_sum = 0;
+//        $similarity_sum = 0;
+//        foreach ($factors as $factor) {
+//            $weight_sum += $factor[$key_weight];
+//            $similarity_sum += $factor[$key_weight] * $factor[$key_similarity];
+//        }
+//        return $similarity_sum / $weight_sum;
+//    }
+
+//    /**
+//     * Wrapper around levenshtein which calculates the operations relative to the string length
+//     * @see levenshtein
+//     * @param string $str1 The first string
+//     * @param string $str2 The second string
+//     * @return float The operations relative to the string length.
+//     */
+//    private static function levenshtein_realtive($str1, $str2) {
+//        return 1 - levenshtein($str1, $str2) / max(strlen($str1), strlen($str2));
+//    }
+
+//    /**
+//     * Calculates the similarits between the two numbers based on the relative difference between them
+//     * @param int $val1 The first number
+//     * @param int $val2 The second number
+//     * @return float The similarity of the passed numbers
+//     */
+//    private static function number_similarity_realtive($val1, $val2) {
+//        return 1 - abs($val1 - $val2) / max($val1, $val2);
+//    }
+}
+
+
+/**
+ * Class local_changeloglib_update_detector_distribution.
+ *
+ * This is a data class to manage all mappings of new files to their predecessors and the resulting similarity.
+ * Use this if you have a list of mappings.
+ *
+ * @copyright (c) 2017 Hendrik Wuerz
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
+class local_changeloglib_update_detector_distribution {
+
+    /**
+     * @var local_changeloglib_update_detector_mapping[] $mappings All given mappings.
+     */
+    public $mappings;
+
+    /**
+     * @var float $similarity The total similarity if all mappings would be done as stored.
+     */
+    public $similarity;
+
+    /**
+     * This is a data class to manage all mappings of new files to their predecessors and the resulting similarity.
+     * Use this if you have a list of mappings.
+     * @param local_changeloglib_update_detector_mapping[] $mappings All given mappings.
+     * @param float $similarity The total similarity if all mappings would be done as stored.
+     */
+    public function __construct(array $mappings, $similarity){
+        $this->mappings = $mappings;
+        $this->similarity = $similarity;
     }
 
     /**
-     * Calculates the similarity of the passed files based on meta information.
-     * This means, the content will not become analysed.
-     * @param stored_file $original The original file which is now uploaded
-     * @param stored_file $candidate An candidate which might be a predecessor of the file.
-     * @return float The similarity of the two files based on meta information. Value in range [0,1]
+     * Adds a new mapping to the distribution.
+     * @param local_changeloglib_update_detector_mapping $mapping The new mapping.
+     * @param float $similarity The similarity of the new mapping.
      */
-    private static function calculate_meta_similarity(stored_file $original, stored_file $candidate) {
-
-        $key_weight = 0;
-        $key_similarity = 1;
-        $factors = array();
-
-        // How similar are the file names.
-        $filename = self::levenshtein_realtive($original->get_filename(), $candidate->get_filename());
-        $factors[] = array($key_weight => 1, $key_similarity => $filename);
-
-        // How similar is the file size.
-        $filesize = self::number_similarity_realtive($original->get_filesize(), $candidate->get_filesize());
-        $factors[] = array($key_weight => 1, $key_similarity => $filesize);
-
-        // How many minutes ago the candidate was deleted
-        // Until one minute (= 60 sec) the similarity will not decrease.
-        $deletion_time = 1 / (1 + 0.01 * ( time() - $candidate->get_timemodified()));
-        $factors[] = array($key_weight => 0.5, $key_similarity => $deletion_time);
-
-        // Sum up all factors with their weights.
-        $weight_sum = 0;
-        $similarity_sum = 0;
-        foreach ($factors as $factor) {
-            $weight_sum += $factor[$key_weight];
-            $similarity_sum += $factor[$key_weight] * $factor[$key_similarity];
-        }
-        return $similarity_sum / $weight_sum;
+    public function add_mapping(local_changeloglib_update_detector_mapping $mapping, $similarity) {
+        array_push($this->mappings, $mapping);
+        $this->similarity += $similarity;
     }
 
     /**
-     * Wrapper around levenshtein which calculates the operations relative to the string length
-     * @see levenshtein
-     * @param string $str1 The first string
-     * @param string $str2 The second string
-     * @return float The operations relative to the string length.
+     * Compares this distribution with another one. Checks whether this one is better than the passed one.
+     * @param local_changeloglib_update_detector_distribution $other The distribution which should be compared.
+     * @return bool Whether this distribution is better than the passed one.
      */
-    private static function levenshtein_realtive($str1, $str2) {
-        return 1 - levenshtein($str1, $str2) / max(strlen($str1), strlen($str2));
+    public function is_better_than($other) {
+        return $this->similarity > $other->similarity;
     }
+}
+
+
+/**
+ * Class local_changeloglib_update_detector_mapping.
+ *
+ * This is a data class to manage the mapping of a new file to a selected predecessor.
+ * Use this if you have found the correct predecessor for a new file.
+ *
+ * @copyright (c) 2017 Hendrik Wuerz
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
+class local_changeloglib_update_detector_mapping {
 
     /**
-     * Calculates the similarits between the two numbers based on the relative difference between them
-     * @param int $val1 The first number
-     * @param int $val2 The second number
-     * @return float The similarity of the passed numbers
+     * @var local_changeloglib_new_file_wrapper $file_wrapper
      */
-    private static function number_similarity_realtive($val1, $val2) {
-        return 1 - abs($val1 - $val2) / max($val1, $val2);
+    public $file_wrapper;
+
+    /**
+     * @var local_changeloglib_new_file_predecessor $predecessor
+     */
+    public $predecessor;
+
+    /**
+     * This is a data class to manage the mapping of a new file to a selected predecessor.
+     * Use this if you have found the correct predecessor for a new file.
+     * @param local_changeloglib_new_file_wrapper $file_wrapper The new file for which a predecessor search was performed.
+     * @param local_changeloglib_new_file_predecessor $predecessor The selected predecessor for the file.
+     */
+    public function __construct(local_changeloglib_new_file_wrapper $file_wrapper, local_changeloglib_new_file_predecessor $predecessor) {
+        $this->file_wrapper = $file_wrapper;
+        $this->predecessor = $predecessor;
     }
 }
