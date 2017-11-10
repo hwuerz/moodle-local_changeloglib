@@ -79,11 +79,11 @@ class local_changeloglib_new_update_detector_test extends advanced_testcase {
         $this->prepare_coursemodules();
 
         // Backup old files.
-        local_changeloglib_test_helper::backup($this->file->file);
-        local_changeloglib_test_helper::backup($this->other->file);
+        local_changeloglib_test_helper::backup($this->file->file, array('id' => 41));
+        local_changeloglib_test_helper::backup($this->other->file, array('id' => 42));
 
         $new_files = array(
-            new local_changeloglib_new_file_wrapper($this->other->file, array()),
+            new local_changeloglib_new_file_wrapper($this->other->file, array('id' => 43)),
             new local_changeloglib_new_file_wrapper($this->file_v2->file, array())
         );
         $context = context_system::instance()->id;

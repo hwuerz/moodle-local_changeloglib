@@ -284,40 +284,40 @@ class local_changeloglib_update_detector {
         }
     }
 
-    /**
-     * Check whether the new file is an update of an older version.
-     * @return bool|int|stored_file
-     *          False if this is not an update of an earlier file.
-     *          -1 if this file already exists.
-     *          The previous version of this file if found.
-     */
-    public function is_update() {
-
-        $candidate = $this->get_best_candidate();
-
-        // No candidate was found.
-        if ($candidate == null) {
-            return false;
-        }
-
-        // Threshold: If the candidate similarity is lower this value is is not a predecessor.
-        if ($candidate->similarity < $this->min_similarity) {
-            return false;
-        }
-
-        // A fitting predecessor was found --> Store it.
-        $this->predecessor = $candidate->file;
-
-        // Check whether the files are identically.
-        // The detector might be called if a module becomes updated. In this case it is possible, that only meta information
-        // were changed and the file itself is the same as before. In this case it must not be recognized as an update
-        // of itself.
-        if ($this->new_file->get_contenthash() == $candidate->file->get_contenthash()) {
-            return -1;
-        }
-
-        return $this->predecessor;
-    }
+//    /**
+//     * Check whether the new file is an update of an older version.
+//     * @return bool|int|stored_file
+//     *          False if this is not an update of an earlier file.
+//     *          -1 if this file already exists.
+//     *          The previous version of this file if found.
+//     */
+//    public function is_update() {
+//
+//        $candidate = $this->get_best_candidate();
+//
+//        // No candidate was found.
+//        if ($candidate == null) {
+//            return false;
+//        }
+//
+//        // Threshold: If the candidate similarity is lower this value is is not a predecessor.
+//        if ($candidate->similarity < $this->min_similarity) {
+//            return false;
+//        }
+//
+//        // A fitting predecessor was found --> Store it.
+//        $this->predecessor = $candidate->file;
+//
+//        // Check whether the files are identically.
+//        // The detector might be called if a module becomes updated. In this case it is possible, that only meta information
+//        // were changed and the file itself is the same as before. In this case it must not be recognized as an update
+//        // of itself.
+//        if ($this->new_file->get_contenthash() == $candidate->file->get_contenthash()) {
+//            return -1;
+//        }
+//
+//        return $this->predecessor;
+//    }
 
     /**
      * Deletes the backup of the found predecessor.
@@ -333,82 +333,82 @@ class local_changeloglib_update_detector {
         return false;
     }
 
-    /**
-     * Get the best candidate for an update. If a fitting definite predecessor was found, it will be returned. Otherwise
-     * the best predecessor based on the backups and the further_candidates will be found.
-     * @return null|stdClass
-     * Null is returned if no candidate fits.
-     * The stdClass contains the key of the best candidate, the calculated similarity and the stored_file of the best candidate
-     */
-    private function get_best_candidate() {
+//    /**
+//     * Get the best candidate for an update. If a fitting definite predecessor was found, it will be returned. Otherwise
+//     * the best predecessor based on the backups and the further_candidates will be found.
+//     * @return null|stdClass
+//     * Null is returned if no candidate fits.
+//     * The stdClass contains the key of the best candidate, the calculated similarity and the stored_file of the best candidate
+//     */
+//    private function get_best_candidate() {
+//
+//        // Check whether additional data are passed to the new file.
+//        // Only if some are present, a search for a definite predecessor makes sense.
+//        if (count($this->new_data) > 0) {
+//            // Check whether there is a definite predecessor. (= a backup of exactly this course module)
+//            // Use it, if it is not completely unfitting.
+//            $definite_predecessor = $this->get_definite_predecessor();
+//            if ($definite_predecessor != null && $definite_predecessor->similarity > 0.2) {
+//                return $definite_predecessor;
+//            }
+//        }
+//
+//        // Get the best candidate from both origins: The already deleted but backed files and the further_candidates.
+//        return $this->get_best_meta_candidate();
+//    }
 
-        // Check whether additional data are passed to the new file.
-        // Only if some are present, a search for a definite predecessor makes sense.
-        if (count($this->new_data) > 0) {
-            // Check whether there is a definite predecessor. (= a backup of exactly this course module)
-            // Use it, if it is not completely unfitting.
-            $definite_predecessor = $this->get_definite_predecessor();
-            if ($definite_predecessor != null && $definite_predecessor->similarity > 0.2) {
-                return $definite_predecessor;
-            }
-        }
+//    /**
+//     * Check whether there is a previous version of exactly this element is stored.
+//     * This situation happens if the user updates a file via the 'edit settings' dialog.
+//     * In this case the ID does not change and `data` will map.
+//     * Because Moodle will increase the IDs for each new file, an other upload can not be detected
+//     * as a definite predecessor falsely. (Only if `data` was set to a non-ID field)
+//     * @return null|stdClass Null if no definite predecessor could be found. StdClass width similarity
+//     * and file a definite predecessor was found. Hint: Similarity is always 1
+//     */
+//    private function get_definite_predecessor() {
+//
+//        // Array of all found predecessors.
+//        // A candidate is only a predecessor if the stored data matches the values from the current file.
+//        $definite_predecessors = array();
+//
+//        // Iterate candidates to check if it is a predecessor.
+//        foreach ($this->backups as $candidate) {
+//            $data = json_decode($candidate->data, true);
+//            $is_equal = true;
+//            foreach ($this->new_data as $key => $value) { // Check each data attribute of the current file.
+//                if ($data[$key] != $value) {
+//                    $is_equal = false;
+//                    break;
+//                }
+//            }
+//            if ($is_equal) { // The candidate is a valid predecessor.
+//                $file = local_changeloglib_backup_lib::get_backup_file($candidate);
+//                $definite_predecessors[] = $file;
+//            }
+//        }
+//
+//        return $this->check_candidates($definite_predecessors);
+//    }
 
-        // Get the best candidate from both origins: The already deleted but backed files and the further_candidates.
-        return $this->get_best_meta_candidate();
-    }
-
-    /**
-     * Check whether there is a previous version of exactly this element is stored.
-     * This situation happens if the user updates a file via the 'edit settings' dialog.
-     * In this case the ID does not change and `data` will map.
-     * Because Moodle will increase the IDs for each new file, an other upload can not be detected
-     * as a definite predecessor falsely. (Only if `data` was set to a non-ID field)
-     * @return null|stdClass Null if no definite predecessor could be found. StdClass width similarity
-     * and file a definite predecessor was found. Hint: Similarity is always 1
-     */
-    private function get_definite_predecessor() {
-
-        // Array of all found predecessors.
-        // A candidate is only a predecessor if the stored data matches the values from the current file.
-        $definite_predecessors = array();
-
-        // Iterate candidates to check if it is a predecessor.
-        foreach ($this->backups as $candidate) {
-            $data = json_decode($candidate->data, true);
-            $is_equal = true;
-            foreach ($this->new_data as $key => $value) { // Check each data attribute of the current file.
-                if ($data[$key] != $value) {
-                    $is_equal = false;
-                    break;
-                }
-            }
-            if ($is_equal) { // The candidate is a valid predecessor.
-                $file = local_changeloglib_backup_lib::get_backup_file($candidate);
-                $definite_predecessors[] = $file;
-            }
-        }
-
-        return $this->check_candidates($definite_predecessors);
-    }
-
-    /**
-     * Get the best candidate based on the meta information.
-     * Candidates are taken from the backups and from `further_candidates`
-     * @return null|stdClass
-     * Null is returned if no candidate fits.
-     * The stdClass contains the calculated similarity and the stored_file of the best candidate
-     */
-    private function get_best_meta_candidate() {
-
-        // Get the file instances for pending candidates.
-        /** @var stored_file[] $candidate_stored_files */
-        $candidate_stored_files = array_map(function ($candidate) {
-            return local_changeloglib_backup_lib::get_backup_file($candidate);
-        }, $this->backups);
-        $candidate_files = array_merge($candidate_stored_files, $this->further_candidates);
-
-        return $this->check_candidates($candidate_files);
-    }
+//    /**
+//     * Get the best candidate based on the meta information.
+//     * Candidates are taken from the backups and from `further_candidates`
+//     * @return null|stdClass
+//     * Null is returned if no candidate fits.
+//     * The stdClass contains the calculated similarity and the stored_file of the best candidate
+//     */
+//    private function get_best_meta_candidate() {
+//
+//        // Get the file instances for pending candidates.
+//        /** @var stored_file[] $candidate_stored_files */
+//        $candidate_stored_files = array_map(function ($candidate) {
+//            return local_changeloglib_backup_lib::get_backup_file($candidate);
+//        }, $this->backups);
+//        $candidate_files = array_merge($candidate_stored_files, $this->further_candidates);
+//
+//        return $this->check_candidates($candidate_files);
+//    }
 
 //    /**
 //     * Checks all passed files. Returns the best ob them with the calculated similarity.
@@ -645,12 +645,12 @@ class local_changeloglib_backup_wrapper {
         $this->file = $file;
     }
 
-//    /**
-//     * @return stored_file The candidate which is analysed in this object.
-//     */
-//    public function get_candidate() {
-//        return $this->candidate;
-//    }
+    /**
+     * @return null|stdClass The database record of the backup. Null if no record exists (further candidate).
+     */
+    public function get_record() {
+        return $this->record;
+    }
 
     /**
      * @return stored_file The stored file for this backup.
@@ -715,7 +715,16 @@ class local_changeloglib_new_file_wrapper {
      */
     public function check_candidates($backups, $ensure_mime_type, $min_similarity) {
 
+        $require_definite_predecessor = $this->has_definite_predecessors($backups);
+
         foreach ($backups as $candidate) {
+
+            // Only allow definite predecessors if they are required.
+            if ($require_definite_predecessor) {
+                if (!self::is_data_equal($candidate->get_record()->data, $this->data)) {
+                    continue; // This is not a definite predecessor --> skip the candidate.
+                }
+            }
 
             // The types of the files must match.
             $fitting_mime_type = $this->file->get_mimetype() == $candidate->get_file()->get_mimetype();
@@ -747,6 +756,43 @@ class local_changeloglib_new_file_wrapper {
             $predecessor_candidate = new local_changeloglib_new_file_predecessor($candidate, $similarity);
             $this->predecessor_candidates[] = $predecessor_candidate;
         }
+    }
+
+    /**
+     * Checks whether the backups contain at least one definite predecessor.
+     * @param local_changeloglib_backup_wrapper[] $backups All available backups which could be a predecessor for this file.
+     * @return bool True if there is at least one definite predecessor, false otherwise.
+     */
+    private function has_definite_predecessors($backups) {
+        foreach ($backups as $candidate) {
+            // Check whether this candidate is a definite predecessor.
+            if (self::is_data_equal($candidate->get_record()->data, $this->data)) {
+                return true;
+            }
+        }
+        // No definite predecessors found in all candidates.
+        return false;
+    }
+
+    /**
+     * Checks whether two data objects are equal.
+     * @param string $data1 The first data object as a JSON String.
+     * @param array $data2 The second data object as an array.
+     * @return bool Whether the two data objects are equal.
+     */
+    private static function is_data_equal($data1, $data2) {
+        // Extract the data object from the string.
+        $data = json_decode($data1, true);
+
+        $is_equal = true;
+        foreach ($data2 as $key => $value) { // Check each data attribute of the current file.
+            if ($data[$key] != $value) { // If only one is not equal...
+                $is_equal = false; // ... the two objects are not equal.
+                break;
+            }
+        }
+
+        return $is_equal;
     }
 
     /**
