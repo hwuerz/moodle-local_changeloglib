@@ -32,3 +32,13 @@ defined('MOODLE_INTERNAL') || die;
 // Module metadata.
 $string['pluginname'] = 'Changelog Lib';
 $string['deletion_backup_clean_task'] = 'Clean old backups';
+$string['settings_pdftotext_path'] = 'pdftotext path';
+$string['settings_pdftotext_path_help'] = 'The path to the command line program pdftotext. It is used to convert pdf documents before differences can be detected.';
+$string['settings_diff_path'] = 'diff path';
+$string['settings_diff_path_help'] = 'The path to the command line program diff. It is used to compare text documents.';
+$string['warning'] = 'Warning';
+$string['success'] = 'Success';
+$string['settings_pdftotext_available'] = '<p>The program pdftotext was found and can be used to detect changes</p>';
+$string['settings_pdftotext_not_available'] = '<p>The program pdftotext was not found at the given path. Please ask your server admin to run <code>apt-get install poppler-utils</code> and visit this page again. This message disappears if the tool is installed correctly.</p>';
+$string['settings_diff_available'] = '<p>The program diff was found and can be used to detect changes</p>';
+$string['settings_diff_not_available'] = '<p>The program <code>diff</code> was not found at the given path. Please ask your server admin to install it and visit this page again. This message disappears if the tool is installed correctly.</p>';

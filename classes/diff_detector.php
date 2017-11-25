@@ -245,6 +245,20 @@ class local_changeloglib_diff_detector {
     }
 
     /**
+     * Checks whether the command line tool diff is installed. This tool is required to search for differences in txt files.
+     * @return bool Whether the required tool is installed or not.
+     */
+    public static function is_command_line_diff_installed() {
+        $path = get_config(LOCAL_CHANGELOGLIB_NAME, 'diff_path');
+        $output = shell_exec($path . ' -v 2>&1');
+        if (strpos($output, 'Free Software Foundation') !== false) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    /**
      * Get the file diff.
      * @return string The diff of the two files in the file array
      */
