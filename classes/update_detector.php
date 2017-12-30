@@ -389,6 +389,7 @@ class local_changeloglib_backup_wrapper {
     }
 
     /**
+     * Get the database record.
      * @return null|stdClass The database record of the backup. Null if no record exists (further candidate).
      */
     public function get_record() {
@@ -396,6 +397,7 @@ class local_changeloglib_backup_wrapper {
     }
 
     /**
+     * Get the stored file.
      * @return stored_file The stored file for this backup.
      */
     public function get_file() {
@@ -403,6 +405,7 @@ class local_changeloglib_backup_wrapper {
     }
 
     /**
+     * Check whether this backup is already used.
      * @return boolean Whether this backup is used as a predecessor by a file or not.
      */
     public function is_used() {
@@ -410,6 +413,7 @@ class local_changeloglib_backup_wrapper {
     }
 
     /**
+     * Changes the 'is-used' status of the backup.
      * @param boolean $is_used Whether this backup is used as a predecessor by a file or not.
      */
     public function set_is_used($is_used) {
@@ -452,6 +456,9 @@ class local_changeloglib_new_file_wrapper {
     }
 
     /**
+     * Checks whether the passed backups are predecessor candidates for this file.
+     * If they are, a reference will be created and stored together with the similarity.
+     * This function ensures the hard limits for the min similarity and MIME-type compatibility.
      * @param local_changeloglib_backup_wrapper[] $backups All available backups which could be a predecessor for this file.
      * @param boolean $ensure_mime_type Whether MIME Types should be ensured (true) or just be a similarity factor (false).
      * @param float $min_similarity The minimum similarity a predecessor must have in the range [0, 1].
@@ -540,6 +547,7 @@ class local_changeloglib_new_file_wrapper {
     }
 
     /**
+     * Get the new file.
      * @return stored_file The new file whose predecessor should be found.
      */
     public function get_file() {
@@ -547,6 +555,7 @@ class local_changeloglib_new_file_wrapper {
     }
 
     /**
+     * Get the 'data' values of the new file.
      * @return array The data array of the new file with constraints for a definite predecessor.
      */
     public function get_data() {
@@ -554,6 +563,7 @@ class local_changeloglib_new_file_wrapper {
     }
 
     /**
+     * Get all predecessor candidates for this file.
      * @return local_changeloglib_new_file_predecessor[] The candidates for a predecessor for this file.
      */
     public function get_predecessor_candidates() {
@@ -646,6 +656,7 @@ class local_changeloglib_new_file_predecessor {
     }
 
     /**
+     * Get the backup which is used in this predecessor object.
      * @return local_changeloglib_backup_wrapper The backup which is analysed in this object.
      */
     public function get_backup() {
@@ -653,6 +664,7 @@ class local_changeloglib_new_file_predecessor {
     }
 
     /**
+     * Get the similarity for this predecessor.
      * @return float The calculated similarity.
      */
     public function get_similarity() {

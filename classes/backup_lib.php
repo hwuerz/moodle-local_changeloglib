@@ -172,6 +172,7 @@ class local_changeloglib_backup_lib {
     }
 
     /**
+     * Get all stored_file objects for backups fulfilling the passed query.
      * @param string $select The DB query to select the files which should be fetched
      * @param null $params The params to the select statement.
      * @return stored_file[] The requested files.
