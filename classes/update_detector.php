@@ -270,7 +270,7 @@ class local_changeloglib_update_detector_distribution {
      * @param local_changeloglib_update_detector_mapping[] $mappings All given mappings.
      * @param float $similarity The total similarity if all mappings would be done as stored.
      */
-    public function __construct(array $mappings, $similarity){
+    public function __construct(array $mappings, $similarity) {
         $this->mappings = $mappings;
         $this->similarity = $similarity;
     }
@@ -339,6 +339,19 @@ class local_changeloglib_update_detector_mapping {
             return true;
         }
         return false;
+    }
+
+    /**
+     * Checks whether the predecessor is another file than the new one.
+     * @return bool Whether this mapping indicates a changed file.
+     */
+    public function has_changed() {
+        if ($this->predecessor == null) {
+            return true; // This file does not have a predecessor. So it is definitely a change.
+        }
+        // This is a real change if the predecessor is not the same file as the new one.
+        return
+            $this->file_wrapper->get_file()->get_contenthash() !== $this->predecessor->get_backup()->get_file()->get_contenthash();
     }
 }
 
