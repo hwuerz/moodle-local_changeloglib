@@ -9,7 +9,7 @@ detection.
 
 Without any other plugins this will not do anything.
 
-This plugin is required by [Upload Notification](https://github.com/hwuerz/moodle-local_uploadnotification) and [Assign Submission Changes](https://github.com/hwuerz/moodle-assignsubmission_changes)
+This plugin is required by [Upload Notification](https://moodle.org/plugins/local_uploadnotification) and [Assign Submission Changes](https://moodle.org/plugins/assignsubmission_changes)
 
 License
 -------
@@ -94,9 +94,8 @@ Use the class `local_changeloglib_backup_lib` to manage your backups. It has six
    
 ### Update detector
 The update detector `local_changeloglib_update_detector` checks whether one file is an update of another. Use it to find the most probable predecessor of a new file.
-* `__construct(stored_file $new_file, array $new_data, $context, $scope, array $further_candidates)`
-   * `@param stored_file $new_file` The new file whose predecessor should be found.
-   * `@param array $new_data` The data array of the new file with constraints for a definite predecessor.
+* `__construct(array $new_files, $context, $scope, array $further_candidates)`
+   * `@param local_changeloglib_new_file_wrapper[] $new_files` The new files whose predecessors should be found.
    * `@param int $context` The context of the file and its predecessor. (Resources: The course context)
    * `@param int $scope` The scope of the file and its predecessor within the context. (In courses: the section)
    * `@param stored_file[] $further_candidates` All other files which should be checked as predecessor. Use this if candidates exists which are not in the backup table.
@@ -104,9 +103,8 @@ The update detector `local_changeloglib_update_detector` checks whether one file
    * `@param bool $ensure_mime_type` Whether the MIME type of the candidates must match or not.
 * `set_min_similarity($min_similarity): void` If the similarity is below this value, a file will be rejected as a predecessor. Adjust this value to define a level of similarity you want to ensure. Default is 0.5
    * `@param float $min_similarity` The minimum similarity a predecessor must have in the range \[0, 1\].
-* `is_update(): bool|stored_file` Check whether the new file is an update of an older version.
-   * `@return bool|stored_file` False if this is not an update of an earlier file. The previous version of this file if found.
-* `get_new_file(): stored_file` Get the new file which was passed in the constructor.
+* `map_backups(): local_changeloglib_update_detector_distribution` Maps the backups to a new file.
+   * `@return local_changeloglib_update_detector_distribution` The best distribution of backups for the new files.
 
 ### PDF to text
 The class `local_changeloglib_pdftotext` is a wrapper to access the command line tool pdftotext from [poppler-utils](https://wiki.ubuntuusers.de/poppler-utils/).
@@ -123,3 +121,4 @@ The diff detector `local_changeloglib_diff_detector` can identify the pages on w
 * `get_info(): string` Get a string with all pages containing changes, separated by comma.
    * `@return string` A string which can be printed to the user.
 * `has_acceptable_amount_of_changes(): bool` Checks whether there are more changes than allowed for a predecessor. Allowed means: Not more than half of the pages contains changes and not more than half of the lines in the documents are changed.
+* `is_command_line_diff_installed(): bool` Checks whether the command line tool diff is installed. This tool is required to search for differences in txt files.
