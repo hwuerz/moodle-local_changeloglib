@@ -40,12 +40,5 @@ function xmldb_local_changeloglib_uninstall() {
 
     local_changeloglib_backup_lib::clean_up_all_files();
 
-    global $DB;
-    $dbman = $DB->get_manager();
-    $table = new xmldb_table(local_changeloglib_backup_lib::BACKUP_TABLE);
-    if ($dbman->table_exists($table)) {
-        $dbman->drop_table($table);
-    }
-
     return true;
 }

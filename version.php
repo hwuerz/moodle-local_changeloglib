@@ -33,9 +33,9 @@ global $CFG;
 
 $plugin->component = 'local_changeloglib';
 
-$plugin->release = '0.2.1';
+$plugin->release = '0.2.2';
 $plugin->maturity = MATURITY_ALPHA;
 
 // Version format:  YYYYMMDDXX.
-$plugin->version = 2017101800;
+$plugin->version = 2017123100;
 $plugin->requires = 2017051500;

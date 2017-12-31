@@ -53,7 +53,7 @@ class local_changeloglib_test_helper {
      * @return stored_file The file instance of moodle.
      */
     public static function create_file($contextid, $filename = 'file.pdf', $component = 'mod_resource', $filearea = 'content',
-                                 $itemid = 0, $filepath = '/') {
+                                       $itemid = 0, $filepath = '/') {
 
         $fs = get_file_storage();
         $file_info = array(
@@ -89,4 +89,68 @@ class local_changeloglib_test_helper {
             $context_id_to, $scope_id);
     }
 
+    /**
+     * Checks whether the passed mappings contain a predecessor for a new_file.
+     * @param local_changeloglib_update_detector_mapping[] $mappings The mappings from the update_detector.
+     * @param local_changeloglib_new_file_wrapper[] $new_files The new files which are analysed in the mappings.
+     * @param stored_file[] $predecessors The expected predecessors or null as an entry if none is expected.
+     * @return bool Whether the passed new_files have a predecessor (false) or not (true).
+     */
+    public static function correct_predecessor($mappings, $new_files, $predecessors) {
+        if (count($mappings) != count($new_files)) {
+            return 'Dimension of $mappings and $new_files do not match';
+        }
+        if (count($predecessors) != count($new_files)) {
+            return 'Dimension of $predecessors and $new_files do not match';
+        }
+        foreach ($mappings as $mapping) {
+
+            // Find the correct original file and expected predecessor.
+            $file = null;
+            $predecessor = null;
+            $hash = $mapping->file_wrapper->get_file()->get_contenthash();
+            foreach ($new_files as $file_idx => $current_file) {
+                if ($hash == $current_file->get_file()->get_contenthash()) {
+                    $file = $current_file;
+                    $predecessor = $predecessors[$file_idx];
+                    break;
+                }
+            }
+
+            if ($file == null) {
+                return 'The mapping file ' . $mapping->file_wrapper->get_file()->get_filename()
+                    . ' is not included in the $new_files array.';
+            }
+            if (is_null($mapping->predecessor) && is_null($predecessor)) {
+                continue; // No predecessor expected an no found --> this mapping is ok.
+            }
+            if (is_null($mapping->predecessor)) {
+                return 'Mapping was null and a predecessor was expected. Expected: ' . $predecessor->get_filename();
+            }
+            if (is_null($predecessor)) {
+                return 'The expected predecessor was null and a mapping was found. Mapping: '
+                    . $mapping->predecessor->get_backup()->get_file()->get_filename();
+            }
+            if ($mapping->predecessor->get_backup()->get_file()->get_contenthash() !== $predecessor->get_contenthash()) {
+                return 'The mapping does not handle the expected predecessor. Found '
+                    . $mapping->predecessor->get_backup()->get_file()->get_filename() . ' Expected '
+                    . $predecessors[$idx]->get_filename();
+            }
+        }
+        return true; // No errors found in any mapping.
+    }
+
+    /**
+     * Checks whether the passed mappings contain a predecessor for a new_file.
+     * @param local_changeloglib_update_detector_mapping[] $mappings The mappings from the update_detector.
+     * @param local_changeloglib_new_file_wrapper[] $new_files The new files which are analysed in the mappings.
+     * @return bool Whether the passed new_files have a predecessor (false) or not (true).
+     */
+    public static function no_predecessor($mappings, $new_files) {
+        $predecessors = array(); // All predecessors have to be null --> Build array with correct size.
+        foreach ($new_files as $new_file) {
+            $predecessors[] = null;
+        }
+        return self::correct_predecessor($mappings, $new_files, $predecessors);
+    }
 }

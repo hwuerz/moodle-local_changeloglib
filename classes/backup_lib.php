@@ -109,17 +109,19 @@ class local_changeloglib_backup_lib {
     /**
      * Deletes all backup files which are older than one hour.
      * This method will be called by the task `clean_backup`.
+     * @return stored_file[] The deleted files.
      */
     public static function clean_up_old_files() {
-        self::clean_up_files('timestamp < ' . (time() - 60 * 60));
+        return self::clean_up_files('timestamp < ' . (time() - 60 * 60));
     }
 
     /**
      * Deletes all backup files.
      * This method will be called when the plugin becomes uninstalled.
+     * @return stored_file[] The deleted files.
      */
     public static function clean_up_all_files() {
-        self::clean_up_files('true');
+        return self::clean_up_files('true');
     }
 
     /**
@@ -127,44 +129,72 @@ class local_changeloglib_backup_lib {
      * This method will be called to delete old submissions when new files are saved.
      * @param int $context The context whose backups should be deleted
      * @param int $scope The scope inside the context whose backups should be deleted.
+     * @return stored_file[] The deleted files.
      */
     public static function clean_up_selected($context, $scope) {
-        self::clean_up_files('context = ? AND scope = ?', array($context, $scope));
+        return self::clean_up_files('context = ? AND scope = ?', array($context, $scope));
     }
 
     /**
      * Delete the backup with the passed ID. This ID is the primary key in the database and the itemid of the file instance.
      * @param int $backup_id The ID in the backup table which should be deleted.
+     * @return stored_file[] The deleted file.
      */
     public static function clean_up_id($backup_id) {
-        self::clean_up_files('id = ?', array($backup_id));
+        return self::clean_up_files('id = ?', array($backup_id));
     }
 
     /**
      * Deletes all backup files which fulfill the passed select query.
      * @param string $select The DB query to select the files which should be deleted
      * @param null $params The params to the select statement.
+     * @return stored_file[] The deleted files.
      */
     private static function clean_up_files($select, $params = null) {
         global $DB;
+
+        // Fetch all fitting files.
+        $files = self::get_files($select, $params);
+
+        // Delete the files.
+        foreach ($files as $file) {
+            try {
+                $file->delete();
+            } catch (Exception $exception) { // This file is not reachable for any reason.
+                continue;
+            }
+        }
+
+        // Delete the reference in the database.
+        $DB->delete_records_select(self::BACKUP_TABLE, $select, $params);
+
+        return $files;
+    }
+
+    /**
+     * Get all stored_file objects for backups fulfilling the passed query.
+     * @param string $select The DB query to select the files which should be fetched
+     * @param null $params The params to the select statement.
+     * @return stored_file[] The requested files.
+     */
+    private static function get_files($select, $params = null) {
+        global $DB;
+
+        // All files which can be found.
+        $files = array();
 
         // Get the references to the files.
         $records = $DB->get_records_select(self::BACKUP_TABLE, $select, $params);
 
         // Get the file instances for the records.
         foreach ($records as $record) {
-            // Delete the file (The loop should only be iterated once).
+            // Add the file (The loop should only be iterated once).
             foreach (self::get_backup_files($record) as $file) {
-                try {
-                    $file->delete();
-                } catch (Exception $exception) { // This file is not reachable for any reason.
-                    continue;
-                }
+                $files[] = $file;
             }
         }
 
-        // Delete the reference in the database.
-        $DB->delete_records_select(self::BACKUP_TABLE, $select, $params);
+        return $files;
     }
 
     /**

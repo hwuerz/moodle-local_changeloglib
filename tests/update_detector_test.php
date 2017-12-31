@@ -83,13 +83,13 @@ class local_changeloglib_update_detector_test extends advanced_testcase {
         local_changeloglib_test_helper::backup($this->other->file);
 
         // Detect predecessor.
-        $detector = new local_changeloglib_update_detector($this->file_v2->file,
-            array(), context_system::instance()->id, -1, array());
-        $predecessor = $detector->is_update();
+        $new_files = array(new local_changeloglib_new_file_wrapper($this->file_v2->file, array()));
+        $detector = new local_changeloglib_update_detector($new_files, context_system::instance()->id, -1, array());
+        $mappings = $detector->map_backups()->mappings;
 
-        // Check predecessor.
-        $this->assertTrue($predecessor !== false); // A predecessor was found.
-        $this->assertEquals($this->file->file->get_contenthash(), $predecessor->get_contenthash()); // The predecessor is correct.
+        // Check predecessor to exist and be correct.
+        $this->assertTrue(local_changeloglib_test_helper::correct_predecessor($mappings, $new_files, array($this->file->file)));
+        $this->assertTrue($mappings[0]->has_changed()); // This is a real update (file has changed).
     }
 
     /**
@@ -105,12 +105,12 @@ class local_changeloglib_update_detector_test extends advanced_testcase {
 
         // Detect predecessor.
         // !!! Use user context for the new file --> original documents were backuped in system context.
-        $detector = new local_changeloglib_update_detector($this->file_v2->file,
-            array(), context_user::instance($this->user->id)->id, -1, array());
-        $predecessor = $detector->is_update();
+        $new_files = array(new local_changeloglib_new_file_wrapper($this->file_v2->file, array()));
+        $detector = new local_changeloglib_update_detector($new_files, context_user::instance($this->user->id)->id, -1, array());
+        $mappings = $detector->map_backups()->mappings;
 
-        // Check predecessor.
-        $this->assertFalse($predecessor); // No predecessor was found.
+        // No predecessor was found.
+        $this->assertTrue(local_changeloglib_test_helper::correct_predecessor($mappings, $new_files, array(null)));
     }
 
     /**
@@ -126,12 +126,12 @@ class local_changeloglib_update_detector_test extends advanced_testcase {
 
         // Detect predecessor.
         // !!! Use scope 42 for the new file --> original documents were backuped in scope -1.
-        $detector = new local_changeloglib_update_detector($this->file_v2->file,
-            array(), context_system::instance()->id, 42, array());
-        $predecessor = $detector->is_update();
+        $new_files = array(new local_changeloglib_new_file_wrapper($this->file_v2->file, array()));
+        $detector = new local_changeloglib_update_detector($new_files, context_system::instance()->id, 42, array());
+        $mappings = $detector->map_backups()->mappings;
 
-        // Check predecessor.
-        $this->assertFalse($predecessor); // No predecessor was found.
+        // No predecessor was found.
+        $this->assertTrue(local_changeloglib_test_helper::correct_predecessor($mappings, $new_files, array(null)));
     }
 
     /**
@@ -144,13 +144,12 @@ class local_changeloglib_update_detector_test extends advanced_testcase {
         // Detect predecessor.
         // !!! No backups were created. Only further candidates are available.
         $further_candidates = array($this->file->file, $this->other->file);
-        $detector = new local_changeloglib_update_detector($this->file_v2->file,
-            array(), context_system::instance()->id, -1, $further_candidates);
-        $predecessor = $detector->is_update();
+        $new_files = array(new local_changeloglib_new_file_wrapper($this->file_v2->file, array()));
+        $detector = new local_changeloglib_update_detector($new_files, context_system::instance()->id, -1, $further_candidates);
+        $mappings = $detector->map_backups()->mappings;
 
-        // Check predecessor.
-        $this->assertTrue($predecessor !== false); // A predecessor was found.
-        $this->assertEquals($this->file->file->get_contenthash(), $predecessor->get_contenthash()); // The predecessor is correct.
+        // Check predecessor to exist and be correct.
+        $this->assertTrue(local_changeloglib_test_helper::correct_predecessor($mappings, $new_files, array($this->file->file)));
     }
 
     /**
@@ -162,12 +161,12 @@ class local_changeloglib_update_detector_test extends advanced_testcase {
 
         // Detect predecessor.
         // !!! No backups were created and no further candidates are available.
-        $detector = new local_changeloglib_update_detector($this->file_v2->file,
-            array(), context_system::instance()->id, -1, array());
-        $predecessor = $detector->is_update();
+        $new_files = array(new local_changeloglib_new_file_wrapper($this->file_v2->file, array()));
+        $detector = new local_changeloglib_update_detector($new_files, context_system::instance()->id, -1, array());
+        $mappings = $detector->map_backups()->mappings;
 
-        // Check predecessor.
-        $this->assertFalse($predecessor); // No predecessor was found.
+        // No predecessor was found.
+        $this->assertTrue(local_changeloglib_test_helper::correct_predecessor($mappings, $new_files, array(null)));
     }
 
     /**
@@ -182,13 +181,13 @@ class local_changeloglib_update_detector_test extends advanced_testcase {
         local_changeloglib_test_helper::backup($this->other->file);
 
         // Detect predecessor.
-        $detector = new local_changeloglib_update_detector($this->file_v2->file,
-            array(), context_system::instance()->id, -1, array());
+        $new_files = array(new local_changeloglib_new_file_wrapper($this->file_v2->file, array()));
+        $detector = new local_changeloglib_update_detector($new_files, context_system::instance()->id, -1, array());
         $detector->set_min_similarity(1);
-        $predecessor = $detector->is_update();
+        $mappings = $detector->map_backups()->mappings;
 
-        // Check predecessor.
-        $this->assertFalse($predecessor); // No predecessor was found because min similarity of 1 is not possible.
+        // No predecessor was found because min similarity of 1 is not possible.
+        $this->assertTrue(local_changeloglib_test_helper::correct_predecessor($mappings, $new_files, array(null)));
     }
 
     /**
@@ -207,12 +206,12 @@ class local_changeloglib_update_detector_test extends advanced_testcase {
         local_changeloglib_test_helper::backup($this->other->file);
 
         // Detect predecessor.
-        $detector = new local_changeloglib_update_detector($this->file_v2->file,
-            array(), context_system::instance()->id, -1, array());
-        $predecessor = $detector->is_update();
+        $new_files = array(new local_changeloglib_new_file_wrapper($this->file_v2->file, array()));
+        $detector = new local_changeloglib_update_detector($new_files, context_system::instance()->id, -1, array());
+        $mappings = $detector->map_backups()->mappings;
 
-        // Check predecessor.
-        $this->assertFalse($predecessor); // No predecessor was found because min similarity of 1 is not possible.
+        // No predecessor was found because min similarity of 1 is not possible.
+        $this->assertTrue(local_changeloglib_test_helper::correct_predecessor($mappings, $new_files, array(null)));
     }
 
     /**
@@ -231,16 +230,15 @@ class local_changeloglib_update_detector_test extends advanced_testcase {
         local_changeloglib_test_helper::backup($this->other->file);
 
         // Detect predecessor.
-        $detector = new local_changeloglib_update_detector($this->file_v2->file,
-            array(), context_system::instance()->id, -1, array());
+        $new_files = array(new local_changeloglib_new_file_wrapper($this->file_v2->file, array()));
+        $detector = new local_changeloglib_update_detector($new_files, context_system::instance()->id, -1, array());
         // Enable other file types. !!!
         $detector->set_ensure_mime_type(false);
         $detector->set_min_similarity(0);
-        $predecessor = $detector->is_update();
+        $mappings = $detector->map_backups()->mappings;
 
-        // Check predecessor.
-        $this->assertTrue($predecessor !== false); // A predecessor was found.
-        $this->assertEquals($this->file->file->get_contenthash(), $predecessor->get_contenthash()); // The predecessor is correct.
+        // Check predecessor to exist and be correct.
+        $this->assertTrue(local_changeloglib_test_helper::correct_predecessor($mappings, $new_files, array($this->file->file)));
     }
 
     /**
@@ -257,12 +255,39 @@ class local_changeloglib_update_detector_test extends advanced_testcase {
         local_changeloglib_test_helper::backup($this->file_v2->file);
 
         // Detect predecessor of file (!) not file_v2.
-        $detector = new local_changeloglib_update_detector($this->file->file,
-            array(), context_system::instance()->id, -1, array());
-        $predecessor = $detector->is_update();
+        $new_files = array(new local_changeloglib_new_file_wrapper($this->file->file, array()));
+        $detector = new local_changeloglib_update_detector($new_files, context_system::instance()->id, -1, array());
+        $mappings = $detector->map_backups()->mappings;
 
-        // Check predecessor.
-        $this->assertFalse($predecessor); // No predecessor was found.
+        // Check predecessor to exist and be correct.
+        $this->assertTrue(local_changeloglib_test_helper::correct_predecessor($mappings, $new_files, array($this->file->file)));
+
+        // Check that the mapping was recognized as an identical file.
+        $this->assertFalse($mappings[0]->has_changed());
+    }
+
+    /**
+     * There are two new files but only one backup.
+     * The update_detector must not take the backup for the first file, because the similarity is greater for the second.
+     */
+    public function test_multiple_files() {
+        $this->resetAfterTest(true);
+        $this->prepare_coursemodules();
+
+        // Backup old files.
+        local_changeloglib_test_helper::backup($this->file->file);
+
+        // Detect predecessor of file_v2.
+        $new_files = array(
+            new local_changeloglib_new_file_wrapper($this->other->file, array()),
+            new local_changeloglib_new_file_wrapper($this->file_v2->file, array())
+        );
+        $detector = new local_changeloglib_update_detector($new_files, context_system::instance()->id, -1, array());
+        $mappings = $detector->map_backups()->mappings;
+
+        // Check predecessor to exist and be correct.
+        $this->assertTrue(local_changeloglib_test_helper::correct_predecessor($mappings, $new_files,
+            array(null, $this->file->file)));
     }
 
     /**

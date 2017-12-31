@@ -44,8 +44,9 @@ class local_changeloglib_pdftotext {
      * @return bool Whether the required tool is installed or not.
      */
     public static function is_installed() {
-        $output = shell_exec('dpkg -s poppler-utils 2>&1');
-        if (strpos($output, 'pdf') !== false) {
+        $path = get_config(LOCAL_CHANGELOGLIB_NAME, 'pdftotext_path');
+        $output = shell_exec($path . ' --help 2>&1');
+        if (strpos($output, 'poppler') !== false) {
             return true;
         } else {
             return false;
@@ -70,10 +71,11 @@ class local_changeloglib_pdftotext {
             return false;
         }
 
+        $path = get_config(LOCAL_CHANGELOGLIB_NAME, 'pdftotext_path');
         $file_tmp = $file->copy_content_to_temp();
         $file_tmp_txt = $file_tmp . '_txt';
 
-        shell_exec("pdftotext " . $file_tmp . " " . $file_tmp_txt . " 2>&1");
+        shell_exec($path . " " . $file_tmp . " " . $file_tmp_txt . " 2>&1");
 
         unlink($file_tmp); // Remove PDF file copy.
         return $file_tmp_txt;
