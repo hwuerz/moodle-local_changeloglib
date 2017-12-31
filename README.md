@@ -31,7 +31,7 @@ License
 
 Requirements
 ------------
-* Tested with Moodle 3.3+
+* Tested with Moodle 3.4+
 * For the diff detection, the command line tools [poppler-utils](https://wiki.ubuntuusers.de/poppler-utils/) and [diff](https://wiki.ubuntuusers.de/diff/) are required.
 
 Installation
