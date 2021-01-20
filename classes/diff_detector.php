@@ -263,8 +263,9 @@ class local_changeloglib_diff_detector {
      * @return string The diff of the two files in the file array
      */
     private function run_command_line_diff() {
+        $path = get_config(LOCAL_CHANGELOGLIB_NAME, 'diff_path');
         // Parameter -w to ignore whitespaces; -B to ignore blank lines.
-        $cmd = "diff -w -B " . $this->file[0] . " " . $this->file[1] . " 2>&1";
+        $cmd = $path . " -w -B " . $this->file[0] . " " . $this->file[1] . " 2>&1";
         return shell_exec($cmd);
     }
 }
