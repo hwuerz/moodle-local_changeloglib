@@ -210,7 +210,7 @@ class local_changeloglib_backup_lib {
             self::BACKUP_FILEAREA,
             $backup->id,
             'sortorder DESC, id ASC',
-            true);
+            false);
         return $files;
     }
 
